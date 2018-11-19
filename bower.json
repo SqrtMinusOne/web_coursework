@@ -1,0 +1,20 @@
+{
+  "name": "web_curswork",
+  "description": "Course work",
+  "main": "",
+  "authors": [
+    "SqrtMinusOne"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "w3css-v3": "^3.0.4"
+  }
+}
