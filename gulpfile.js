@@ -16,7 +16,9 @@ const prod = (argv.prod === true);
 const ts = ()=>{
   return gulp.src('src/**/*.ts')
       .pipe(gulpif(!prod, sourcemaps.init()))
-      .pipe(typescript())
+      .pipe(typescript({
+          target: 'es5'
+      }))
       .pipe(gulpif(prod, minify()))
       .pipe(gulpif(!prod, sourcemaps.mapSources((sourcePath, file)=>{
           return '../src/' + sourcePath
@@ -54,9 +56,14 @@ const bower = ()=>{
         .pipe(gulp.dest('dist/lib/'));
 };
 
+const assets = ()=>{
+    return gulp.src('assets/*')
+        .pipe(gulp.dest('dist/assets/'));
+};
+
 gulp.task('clean', function () {
     return del('dist/**', {force: true});
 });
 
-gulp.task('build', gulp.parallel(ts, views, bower, styles));
+gulp.task('build', gulp.parallel(ts, views, bower, styles, assets));
 gulp.task('default', gulp.series("clean", "build"));

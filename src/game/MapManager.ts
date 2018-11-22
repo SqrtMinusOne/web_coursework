@@ -30,21 +30,23 @@ interface loadedTileSet {
     tiles: tileInfo[]
 }
 
+interface Layer {
+    data: number[];
+    height: number;
+    id: number;
+    name: string;
+    opacity: number;
+    type: string;
+    visible: boolean;
+    width: number;
+    x: number;
+    y: number
+}
+
 interface mapJSON {
     height: number;
     infinite: boolean;
-    layers: {
-        data: number[];
-        height: number;
-        id: number;
-        name: string;
-        opacity: number;
-        type: string;
-        visible: boolean;
-        width: number;
-        x: number;
-        y: number
-    }[]
+    layers: Layer[]
     nextlayerid: number,
     nextobjectid: number,
     orientation: string,
@@ -59,23 +61,31 @@ interface mapJSON {
 }
 
 
-export class MapManager {
+class MapManager {
     private mapData: mapJSON;
-    private tLayer: any;
+    private tLayer: Layer;
     private xCount: number;
     private yCount: number;
     private tSize: { x: number, y: number };
     private mapSize: { x: number, y: number };
     private tilesets: loadedTileSet[];
-
     private imgLoadCount: number;
     private imgLoaded: boolean;
     private jsonLoaded: boolean;
+    private view: {x: number, y: number, w: number; h: number};
 
     constructor(){
         this.imgLoadCount = 0;
         this.imgLoaded = false;
         this.jsonLoaded = false;
+        this.view = {x: 0, y: 0, w: 800, h: 600};
+        this.tSize = {x: 0, y: 0};
+        this.mapSize = {x: 0, y: 0};
+        this.tilesets = [];
+    }
+
+    private static getAssetsPath(path: string): string{
+        return '/assets/' + path;
     }
 
     get isLoaded(){
@@ -109,7 +119,7 @@ export class MapManager {
                     this.imgLoaded = true;
                 }
             }.bind(this);
-            img.src = this.mapData.tilesets[i].image;
+            img.src = MapManager.getAssetsPath(this.mapData.tilesets[i].image);
             let t = this.mapData.tilesets[i];
             let ts = {
                 firstgid: t.firstgid,
@@ -129,11 +139,57 @@ export class MapManager {
             setTimeout(()=>{this.draw(ctx)}, 100);
         }
         else{
-            if (this.tLayer === null){
+            if (!this.tLayer){
                 for (let id = 0; id < this.mapData.layers.length; id++){
-
+                    let layer = this.mapData.layers[id];
+                    if (layer.type === 'tilelayer'){
+                        this.tLayer = layer;
+                        break;
+                    }
+                }
+            }
+            for (let i = 0; i < this.tLayer.data.length; i++){
+                if (this.tLayer.data[i] !== 0){
+                    let tile = this.getTile(this.tLayer.data[i]);
+                    let pX = (i % this.xCount) * this.tSize.x;
+                    let pY = Math.floor(i / this.xCount) * this.tSize.y;
+                    if (!this.isVisible(pX, pY, this.tSize.x, this.tSize.y))
+                        continue;
+                    pX -= this.view.x;
+                    pY = this.view.y;
+                    ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x, this.tSize.y, pX, pY, this.tSize.x, this.tSize.y)
                 }
             }
         }
+    }
+
+    getTile(tileIndex: number): {img: HTMLImageElement, px: number, py: number} {
+        let tile = {
+            img: null,
+            px: 0,
+            py: 0
+        };
+        let tileset = this.getTileset(tileIndex);
+        tile.img = tileset.image;
+        let id = tileIndex - tileset.firstgid;
+        let x = id % tileset.xCount;
+        let y = Math.floor(id/tileset.xCount);
+        tile.px = x * this.tSize.x;
+        tile.py = y * this.tSize.y;
+        return tile
+    }
+
+    getTileset(tileIndex: number): loadedTileSet {
+        for (let i = this.tilesets.length - 1; i >= 0; i--){
+            if (this.tilesets[i].firstgid <= tileIndex){
+                return this.tilesets[i];
+            }
+        }
+        return null
+    }
+
+    private isVisible(x: number, y: number, width: number, height: number): boolean {
+        return !(x + width < this.view.x || y + height < this.view.y ||
+            x > this.view.x + this.view.w || y > this.view.y + this.view.h);
     }
 }
