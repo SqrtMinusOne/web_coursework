@@ -1,5 +1,6 @@
+import {MapManager} from './MapManager'
+require('../styles/style.less');
 console.log("Hello, world!");
-// @ts-ignore
 let map = new MapManager();
 // @ts-ignore
 let canvas: HTMLCanvasElement = document.getElementById('main_canvas');

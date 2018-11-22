@@ -61,7 +61,7 @@ interface mapJSON {
 }
 
 
-class MapManager {
+export class MapManager {
     private mapData: mapJSON;
     private tLayer: Layer;
     private xCount: number;
