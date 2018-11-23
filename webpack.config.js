@@ -10,6 +10,10 @@ module.exports = {
     },
     devtool: 'inline-source-map',
     target: 'node',
+ /*   watch: true,
+    watchOptions: {
+        aggregateTimeout: 1000,
+    }, */
     mode: 'development',
     node: {
         __dirname: false,

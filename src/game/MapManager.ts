@@ -63,7 +63,7 @@ interface mapJSON {
 
 export class MapManager {
     private mapData: mapJSON;
-    private tLayer: Layer;
+    private tLayer: Layer[];
     private xCount: number;
     private yCount: number;
     private tSize: { x: number, y: number };
@@ -73,15 +73,20 @@ export class MapManager {
     private imgLoaded: boolean;
     private jsonLoaded: boolean;
     private view: {x: number, y: number, w: number; h: number};
+    private canvas: HTMLCanvasElement;
+    private ctx: CanvasRenderingContext2D;
 
-    constructor(){
+    constructor(canvas: HTMLCanvasElement){
+        this.canvas = canvas;
+        this.ctx = this.canvas.getContext("2d");
         this.imgLoadCount = 0;
         this.imgLoaded = false;
         this.jsonLoaded = false;
-        this.view = {x: 0, y: 0, w: 800, h: 600};
-        this.tSize = {x: 0, y: 0};
-        this.mapSize = {x: 0, y: 0};
+        this.view = {x: 0, y: 0, w: this.canvas.scrollWidth, h: this.canvas.scrollHeight}; // Size of view
+        this.tSize = {x: 0, y: 0}; // Size of tile
+        this.mapSize = {x: 0, y: 0}; // Size of map
         this.tilesets = [];
+        this.tLayer = []
     }
 
     private static getAssetsPath(path: string): string{
@@ -110,64 +115,92 @@ export class MapManager {
         this.tSize.x = this.mapData.tilewidth;
         this.tSize.y = this.mapData.tileheight;
         this.mapSize.x = this.xCount * this.tSize.x;
-        this.mapSize.y = this.xCount * this.tSize.y;
+        this.mapSize.y = this.yCount * this.tSize.y;
+        if (this.mapSize.x < this.view.w){
+            this.view.x = -Math.floor(( this.view.w - this.mapSize.x) / 2 )
+        }
+        if (this.mapSize.y < this.view.h){
+            this.view.y = -Math.floor((this.view.h - this.mapSize.y) / 2);
+        }
         for (let i = 0; i < this.mapData.tilesets.length; i++) {
-            let img = new Image();
-            img.onload = function () {
-                this.imgLoadCount++;
-                if (this.imgLoadCount === this.mapData.tilesets.length){
-                    this.imgLoaded = true;
-                }
-            }.bind(this);
-            img.src = MapManager.getAssetsPath(this.mapData.tilesets[i].image);
-            let t = this.mapData.tilesets[i];
-            let ts = {
-                firstgid: t.firstgid,
-                image: img,
-                name: t.name,
-                xCount: Math.floor(t.imagewidth / this.tSize.x),
-                yCount: Math.floor(t.imagewidth / this.tSize.y),
-                tiles: t.tiles,
-            };
-            this.tilesets.push(ts);
+            this.loadTileSet(this.mapData.tilesets[i]);
         }
         this.jsonLoaded = true;
     }
 
-    draw(ctx: CanvasRenderingContext2D){
+    private loadTileSet(tileset: tileSet) {
+        let img = new Image();
+        img.onload = function () {
+            this.imgLoadCount++;
+            if (this.imgLoadCount === this.mapData.tilesets.length) {
+                this.imgLoaded = true;
+            }
+        }.bind(this);
+        img.src = MapManager.getAssetsPath(tileset.image);
+        let t = tileset;
+        let tiles = [];
+        if (t.tiles) {
+            for (let i = 0; i < t.tiles.length; i++) {
+                tiles[t.tiles[i].id] = t.tiles[i]
+            }
+        }
+        let ts = {
+            firstgid: t.firstgid,
+            image: img,
+            name: t.name,
+            xCount: Math.floor(t.imagewidth / this.tSize.x),
+            yCount: Math.floor(t.imagewidth / this.tSize.y),
+            tiles: tiles
+        };
+        this.tilesets.push(ts);
+    }
+
+    draw(){
         if (!this.isLoaded){
-            setTimeout(()=>{this.draw(ctx)}, 100);
+            setTimeout(()=>{this.draw()}, 100);
         }
         else{
-            if (!this.tLayer){
+            if (this.tLayer.length === 0){
                 for (let id = 0; id < this.mapData.layers.length; id++){
                     let layer = this.mapData.layers[id];
                     if (layer.type === 'tilelayer'){
-                        this.tLayer = layer;
-                        break;
+                        this.tLayer.push(layer);
                     }
                 }
             }
-            for (let i = 0; i < this.tLayer.data.length; i++){
-                if (this.tLayer.data[i] !== 0){
-                    let tile = this.getTile(this.tLayer.data[i]);
+            this.drawLoadedLayers();
+        }
+    }
+
+    private drawLoadedLayers() {
+        for (let j = 0; j < this.tLayer.length; j++) {
+            for (let i = 0; i < this.tLayer[j].data.length; i++) {
+                if (this.tLayer[j].data[i] !== 0) {
+                    let tile = this.getTile(this.tLayer[j].data[i]);
                     let pX = (i % this.xCount) * this.tSize.x;
                     let pY = Math.floor(i / this.xCount) * this.tSize.y;
                     if (!this.isVisible(pX, pY, this.tSize.x, this.tSize.y))
                         continue;
                     pX -= this.view.x;
-                    pY = this.view.y;
-                    ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x, this.tSize.y, pX, pY, this.tSize.x, this.tSize.y)
+                    pY -= this.view.y;
+                    this.ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x, this.tSize.y,
+                        pX, pY, this.tSize.x, this.tSize.y);
+                    /*this.ctx.rect(pX, pY, this.tSize.x, this.tSize.y);
+                    this.ctx.stroke();*/
+                    if (tile.info){
+                        console.log(tile.info)
+                    }
                 }
             }
         }
     }
 
-    getTile(tileIndex: number): {img: HTMLImageElement, px: number, py: number} {
+    getTile(tileIndex: number): {img: HTMLImageElement, px: number, py: number, info: tileInfo | undefined} {
         let tile = {
             img: null,
             px: 0,
-            py: 0
+            py: 0,
+            info: undefined
         };
         let tileset = this.getTileset(tileIndex);
         tile.img = tileset.image;
@@ -176,6 +209,8 @@ export class MapManager {
         let y = Math.floor(id/tileset.xCount);
         tile.px = x * this.tSize.x;
         tile.py = y * this.tSize.y;
+        //console.log(id);
+        tile.info = tileset.tiles[id];
         return tile
     }
 
@@ -191,5 +226,6 @@ export class MapManager {
     private isVisible(x: number, y: number, width: number, height: number): boolean {
         return !(x + width < this.view.x || y + height < this.view.y ||
             x > this.view.x + this.view.w || y > this.view.y + this.view.h);
+
     }
 }
