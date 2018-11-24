@@ -1,4 +1,4 @@
-interface tileInfo {
+interface TileInfo {
     id: number,
     type: string
     animation: {
@@ -7,7 +7,7 @@ interface tileInfo {
     }[]
 }
 
-interface tileSet {
+interface TileSet {
     columns: number,
     firstgid: number,
     image: string,
@@ -18,32 +18,53 @@ interface tileSet {
     spacing: number,
     tilecount: number,
     tileheight: number,
-    tiles: tileInfo[]
+    tiles: TileInfo[]
 }
 
-interface loadedTileSet {
+interface LoadedTileSet {
     firstgid: number,
     image: HTMLImageElement,
     name: string,
     xCount: number,
     yCount: number
-    tiles: tileInfo[]
+    tiles: TileInfo[]
 }
 
 interface Layer {
-    data: number[];
-    height: number;
     id: number;
     name: string;
     opacity: number;
     type: string;
     visible: boolean;
-    width: number;
     x: number;
     y: number
 }
 
-interface mapJSON {
+interface TileLayer extends Layer {
+    data: number[];
+    height: number;
+    width: number;
+}
+
+interface ObjectLayer extends Layer {
+    draworder: string;
+    objects: tileObject[];
+}
+
+interface tileObject {
+    gid: number;
+    height: number;
+    id: number;
+    name: string;
+    rotation: number;
+    type: string;
+    visible: boolean;
+    width: number;
+    x: number;
+    y: number;
+}
+
+interface MapJSON {
     height: number;
     infinite: boolean;
     layers: Layer[]
@@ -53,7 +74,7 @@ interface mapJSON {
     renderorder: string,
     tiledversion: string,
     tileheight: number,
-    tilesets: tileSet[]
+    tilesets: TileSet[]
     tilewidth: number;
     type: string;
     version: number;
@@ -61,22 +82,32 @@ interface mapJSON {
 }
 
 
+interface LoadedTileInfo {
+    img: HTMLImageElement,
+    tilesetFirstGid: number,
+    px: number,
+    py: number,
+    info: TileInfo | undefined
+}
+
 export class MapManager {
-    private mapData: mapJSON;
-    private tLayer: Layer[];
+    private mapData: MapJSON;
+    private tLayer: TileLayer[];
+    private eLayer: Layer[];
     private xCount: number;
     private yCount: number;
     private tSize: { x: number, y: number };
     private mapSize: { x: number, y: number };
-    private tilesets: loadedTileSet[];
+    private tilesets: LoadedTileSet[];
     private imgLoadCount: number;
     private imgLoaded: boolean;
     private jsonLoaded: boolean;
-    private view: {x: number, y: number, w: number; h: number};
+    public view: {x: number, y: number, w: number; h: number};
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
+    private animationIntervals;
 
-    constructor(canvas: HTMLCanvasElement){
+    constructor(canvas: HTMLCanvasElement, path: string){
         this.canvas = canvas;
         this.ctx = this.canvas.getContext("2d");
         this.imgLoadCount = 0;
@@ -86,18 +117,15 @@ export class MapManager {
         this.tSize = {x: 0, y: 0}; // Size of tile
         this.mapSize = {x: 0, y: 0}; // Size of map
         this.tilesets = [];
-        this.tLayer = []
+        this.tLayer = [];
+        this.animationIntervals = [];
+        this.loadMap(path);
     }
-
-    private static getAssetsPath(path: string): string{
-        return '/assets/' + path;
-    }
-
     get isLoaded(){
-        return this.imgLoaded && this.jsonLoaded;
+        return this.imgLoaded && this.jsonLoaded ;
     }
 
-    loadMap(path: string) {
+    private loadMap(path: string) {
         let request = new XMLHttpRequest();
         request.onreadystatechange = function () {
             if (request.readyState === 4 && request.status === 200) {
@@ -108,7 +136,7 @@ export class MapManager {
         request.send();
     }
 
-    parseMap(tilesJSON){
+    private parseMap(tilesJSON){
         this.mapData= JSON.parse(tilesJSON);
         this.xCount = this.mapData.width;
         this.yCount = this.mapData.height;
@@ -116,32 +144,31 @@ export class MapManager {
         this.tSize.y = this.mapData.tileheight;
         this.mapSize.x = this.xCount * this.tSize.x;
         this.mapSize.y = this.yCount * this.tSize.y;
-        if (this.mapSize.x < this.view.w){
-            this.view.x = -Math.floor(( this.view.w - this.mapSize.x) / 2 )
-        }
-        if (this.mapSize.y < this.view.h){
-            this.view.y = -Math.floor((this.view.h - this.mapSize.y) / 2);
-        }
-        for (let i = 0; i < this.mapData.tilesets.length; i++) {
-            this.loadTileSet(this.mapData.tilesets[i]);
+        this.centerAtTile(0, 0);
+        for (let tileset of this.mapData.tilesets) {
+            this.loadTileSet(tileset);
         }
         this.jsonLoaded = true;
     }
 
-    private loadTileSet(tileset: tileSet) {
+    private loadTileSet(tileset: TileSet) {
         let img = new Image();
+        if (!('image' in tileset)){
+            console.log('Incorrect tileset');
+            return;
+        }
         img.onload = function () {
             this.imgLoadCount++;
             if (this.imgLoadCount === this.mapData.tilesets.length) {
                 this.imgLoaded = true;
             }
         }.bind(this);
-        img.src = MapManager.getAssetsPath(tileset.image);
+        img.src = '/assets/' + tileset.image;
         let t = tileset;
         let tiles = [];
         if (t.tiles) {
-            for (let i = 0; i < t.tiles.length; i++) {
-                tiles[t.tiles[i].id] = t.tiles[i]
+            for (let tile of t.tiles) {
+                tiles[tile.id] = tile
             }
         }
         let ts = {
@@ -160,44 +187,47 @@ export class MapManager {
             setTimeout(()=>{this.draw()}, 100);
         }
         else{
+            this.clearAnimations();
             if (this.tLayer.length === 0){
-                for (let id = 0; id < this.mapData.layers.length; id++){
-                    let layer = this.mapData.layers[id];
+                for (let layer of this.mapData.layers){
                     if (layer.type === 'tilelayer'){
-                        this.tLayer.push(layer);
+                        this.tLayer.push(<TileLayer>layer);
                     }
                 }
             }
-            this.drawLoadedLayers();
-        }
-    }
-
-    private drawLoadedLayers() {
-        for (let j = 0; j < this.tLayer.length; j++) {
-            for (let i = 0; i < this.tLayer[j].data.length; i++) {
-                if (this.tLayer[j].data[i] !== 0) {
-                    let tile = this.getTile(this.tLayer[j].data[i]);
-                    let pX = (i % this.xCount) * this.tSize.x;
-                    let pY = Math.floor(i / this.xCount) * this.tSize.y;
-                    if (!this.isVisible(pX, pY, this.tSize.x, this.tSize.y))
-                        continue;
-                    pX -= this.view.x;
-                    pY -= this.view.y;
-                    this.ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x, this.tSize.y,
-                        pX, pY, this.tSize.x, this.tSize.y);
-                    /*this.ctx.rect(pX, pY, this.tSize.x, this.tSize.y);
-                    this.ctx.stroke();*/
-                    if (tile.info){
-                        console.log(tile.info)
-                    }
+            for (let layer of this.tLayer) {
+                for (let i = 0; i < layer.data.length; i++) {
+                    this.drawTile(layer, i);
                 }
             }
         }
     }
 
-    getTile(tileIndex: number): {img: HTMLImageElement, px: number, py: number, info: tileInfo | undefined} {
+    private drawTile(layer: TileLayer, tileIndex: number, noAnimate: boolean = false) {
+        if (layer.data[tileIndex] !== 0) {
+            let tile = this.getTile(layer.data[tileIndex]);
+            let pX = (tileIndex % this.xCount) * this.tSize.x;
+            let pY = Math.floor(tileIndex / this.xCount) * this.tSize.y;
+            if (!this.isVisible(pX, pY, this.tSize.x, this.tSize.y))
+                return;
+            pX -= this.view.x;
+            pY -= this.view.y;
+            this.ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x, this.tSize.y,
+                pX, pY, this.tSize.x, this.tSize.y);
+            /*this.ctx.rect(pX, pY, this.tSize.x, this.tSize.y);
+            this.ctx.stroke();*/
+            if (tile.info) {
+                if (tile.info.animation && !noAnimate){
+                    this.animateTile(layer, tileIndex, tile, pX, pY);
+                }
+            }
+        }
+    }
+
+    private getTile(tileIndex: number): LoadedTileInfo {
         let tile = {
             img: null,
+            tilesetFirstGid: 0,
             px: 0,
             py: 0,
             info: undefined
@@ -209,12 +239,57 @@ export class MapManager {
         let y = Math.floor(id/tileset.xCount);
         tile.px = x * this.tSize.x;
         tile.py = y * this.tSize.y;
-        //console.log(id);
+        tile.tilesetFirstGid = tileset.firstgid;
         tile.info = tileset.tiles[id];
         return tile
     }
 
-    getTileset(tileIndex: number): loadedTileSet {
+    parseEntities(){
+        if (!this.isLoaded){
+            setTimeout(()=>{this.parseEntities()}, 100);
+        }
+        {
+            for (let layer of this.mapData.layers){
+                if (layer.type === 'objectgroup'){
+                    for (let entity in <ObjectLayer>layer){
+                        //TODO create GameManager Object
+                    }
+                }
+            }
+        }
+    }
+
+    private animateTile(layer: TileLayer, tileIndex: number, tile: LoadedTileInfo, pX: number, pY: number,
+                        animation_index: number = 0, stack_index = -1){
+        animation_index = animation_index % tile.info.animation.length;
+        let animation = tile.info.animation[animation_index];
+        layer.data[tileIndex] = animation.tileid + tile.tilesetFirstGid;
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "#FFFFFF";
+        this.ctx.fillRect(pX, pY, this.tSize.x, this.tSize.y);
+        for (let layer of this.tLayer){
+            this.drawTile(layer, tileIndex, true);
+        }
+        let expected_stack_index = stack_index === -1 ? this.animationIntervals.length : stack_index;
+        let timerId = setTimeout(()=>{
+            this.animateTile(layer, tileIndex, tile, pX, pY, ++animation_index, expected_stack_index)
+        }, animation.duration);
+        if (stack_index === -1){
+            this.animationIntervals.push(timerId);
+        }
+        else{
+            this.animationIntervals[stack_index] = timerId;
+        }
+    }
+
+    private clearAnimations(){
+        for (let timerId of this.animationIntervals){
+            clearTimeout(timerId)
+        }
+        this.animationIntervals.length = 0;
+    }
+
+    getTileset(tileIndex: number): LoadedTileSet {
         for (let i = this.tilesets.length - 1; i >= 0; i--){
             if (this.tilesets[i].firstgid <= tileIndex){
                 return this.tilesets[i];
@@ -223,7 +298,40 @@ export class MapManager {
         return null
     }
 
-    private isVisible(x: number, y: number, width: number, height: number): boolean {
+    getTilesetIds(x: number, y: number){
+        let res:number[] = [];
+        for (let layer of this.tLayer) {
+            let id = (Math.floor(y / this.tSize.y)) * this.xCount + Math.floor(x / this.tSize.x);
+            res.push(layer.data[id]);
+        }
+        return res;
+    }
+
+    centerAtCoords(x:number, y: number){
+        if (this.mapSize.x < this.view.w)
+            this.view.x = -Math.floor(( this.view.w - this.mapSize.x) / 2 );
+        else if(x < this.view.w / 2)
+            this.view.x = 0;
+        else if(x > this.mapSize.x - this.view.w / 2)
+            this.view.x = this.mapSize.x - this.view.w;
+        else
+            this.view.x = x - (this.view.w / 2);
+
+        if (this.mapSize.y < this.view.h)
+            this.view.y = -Math.floor((this.view.h - this.mapSize.y) / 2);
+        else if(y < this.view.h / 2)
+            this.view.y = 0;
+        else if(y > this.mapSize.y - this.view.h / 2)
+            this.view.y = this.mapSize.y - this.view.h;
+        else
+            this.view.y = y - (this.view.h / 2);
+    }
+
+    centerAtTile(x: number, y: number){
+        this.centerAtCoords(x * this.tSize.x, y * this.tSize.y)
+    }
+
+    isVisible(x: number, y: number, width: number, height: number): boolean {
         return !(x + width < this.view.x || y + height < this.view.y ||
             x > this.view.x + this.view.w || y > this.view.y + this.view.h);
 

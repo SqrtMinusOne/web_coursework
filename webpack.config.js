@@ -63,7 +63,8 @@ module.exports = {
         ]),
         new HTMLWebpackPlugin({
             template: './src/views/index.pug',
-            filename: './html/index.html'
+            filename: './html/index.html',
+            chunks: ['client']
         })
     ],
     output: {

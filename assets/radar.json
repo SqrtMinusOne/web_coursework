@@ -43,7 +43,36 @@
                  "duration":75,
                  "tileid":7
                 }],
-         "id":0
+         "id":0,
+         "type":"imp"
+        }, 
+        {
+         "id":1,
+         "type":"imp"
+        }, 
+        {
+         "id":2,
+         "type":"imp"
+        }, 
+        {
+         "id":3,
+         "type":"imp"
+        }, 
+        {
+         "id":4,
+         "type":"imp"
+        }, 
+        {
+         "id":5,
+         "type":"imp"
+        }, 
+        {
+         "id":6,
+         "type":"imp"
+        }, 
+        {
+         "id":7,
+         "type":"imp"
         }],
  "tilewidth":32,
  "type":"tileset",
