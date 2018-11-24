@@ -26,6 +26,14 @@ interface LoadedSprite{
     h: number
 }
 
+interface DrawnSprite extends LoadedSprite{
+    coords: {
+        x: number,
+        y: number
+    },
+    angle: number
+}
+
 interface SpriteAtlas {
     frames: {
         [name: string]: Sprite
@@ -45,6 +53,7 @@ interface SpriteAtlas {
 export class SpriteManager{
     private image: HTMLImageElement;
     private sprites: LoadedSprite[];
+    private drawnSprites: DrawnSprite[];
     private atlas: SpriteAtlas;
     private mapManager: MapManager;
     private ctx: CanvasRenderingContext2D;
@@ -53,11 +62,13 @@ export class SpriteManager{
 
     constructor(canvas: HTMLCanvasElement, path: string, mapManager: MapManager){
         this.sprites = [];
+        this.drawnSprites = [];
         this.imgLoaded = false;
         this.jsonLoaded = false;
         this.mapManager = mapManager;
         this.ctx = canvas.getContext("2d");
         this.loadAtlas(path);
+        this.mapManager.drawCallback = ()=>{this.redrawAllSprites()};
     }
 
     get isLoaded(){
@@ -96,18 +107,27 @@ export class SpriteManager{
         this.jsonLoaded = true;
     }
 
-    drawSpite(name: string, x: number, y: number, angle: number = 0){
+    drawSpite(name: string, x: number, y: number, angle: number = 0, index: number = -1): number{
         if (!this.isLoaded){
-            setTimeout(()=>{this.drawSpite(name, x, y, angle)}, 100);
-            x -= this.mapManager.view.x;
-            y -= this.mapManager.view.y;
+            if (index === -1){
+                index = this.addDrawnSprite(null);
+            }
+            setTimeout(()=>{this.drawSpite(name, x, y, angle, index)}, 100);
         }
         else{
-            let sprite = this.getSprite(name);
+            let sprite = <DrawnSprite>this.getSprite(name);
+            sprite.coords = {x: x, y: y};
+            sprite.angle = angle;
             x -= this.mapManager.view.x;
             y -= this.mapManager.view.y;
+            if (index === -1){
+                index = this.addDrawnSprite(sprite);
+            }
+            else{
+                this.drawnSprites[index] = sprite;
+            }
             if (!this.mapManager.isVisible(x, y, sprite.w, sprite.h)){
-                return;
+                return index;
             }
             this.ctx.save();
             this.ctx.translate(x + sprite.w / 2, y + sprite.h / 2);
@@ -116,6 +136,31 @@ export class SpriteManager{
                 0 - sprite.w / 2, 0 - sprite.h / 2, sprite.w, sprite.h);
             this.ctx.restore();
         }
+        return index;
+    }
+
+    private addDrawnSprite(sprite: DrawnSprite | null){
+        let index: number;
+        for (index = 0; index < this.drawnSprites.length; index++){
+            if (this.drawnSprites[index] === undefined){
+                break;
+            }
+        }
+        this.drawnSprites[index] = sprite;
+        return index;
+    }
+
+    private redrawAllSprites(){
+        for (let i = 0; i < this.drawnSprites.length; i++){
+            let drawnSprite = this.drawnSprites[i];
+            if (drawnSprite){
+                this.drawSpite(drawnSprite.name, drawnSprite.coords.x, drawnSprite.coords.y, drawnSprite.angle, i);
+            }
+        }
+    }
+
+    removeSprite(index: number){
+        delete this.drawnSprites[index];
     }
 
     private getSprite(name: string): LoadedSprite {
@@ -125,4 +170,5 @@ export class SpriteManager{
         }
         return null
     }
+
 }

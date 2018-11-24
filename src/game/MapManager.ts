@@ -91,9 +91,9 @@ interface LoadedTileInfo {
 }
 
 export class MapManager {
+
     private mapData: MapJSON;
     private tLayer: TileLayer[];
-    private eLayer: Layer[];
     private xCount: number;
     private yCount: number;
     private tSize: { x: number, y: number };
@@ -106,6 +106,8 @@ export class MapManager {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
     private animationIntervals;
+    private restoreTiles: (()=>void)[];
+    private _drawCallback: ()=>void;
 
     constructor(canvas: HTMLCanvasElement, path: string){
         this.canvas = canvas;
@@ -119,8 +121,15 @@ export class MapManager {
         this.tilesets = [];
         this.tLayer = [];
         this.animationIntervals = [];
+        this.restoreTiles = [];
+        this._drawCallback = null;
         this.loadMap(path);
     }
+
+    set drawCallback(value: () => void) {
+        this._drawCallback = value;
+    }
+
     get isLoaded(){
         return this.imgLoaded && this.jsonLoaded ;
     }
@@ -188,6 +197,7 @@ export class MapManager {
         }
         else{
             this.clearAnimations();
+            this.ctx.clearRect(0, 0, this.view.h, this.view.w);
             if (this.tLayer.length === 0){
                 for (let layer of this.mapData.layers){
                     if (layer.type === 'tilelayer'){
@@ -199,6 +209,9 @@ export class MapManager {
                 for (let i = 0; i < layer.data.length; i++) {
                     this.drawTile(layer, i);
                 }
+            }
+            if (this._drawCallback){
+                this._drawCallback();
             }
         }
     }
@@ -267,26 +280,39 @@ export class MapManager {
         this.ctx.beginPath();
         this.ctx.fillStyle = "#FFFFFF";
         this.ctx.fillRect(pX, pY, this.tSize.x, this.tSize.y);
-        for (let layer of this.tLayer){
-            this.drawTile(layer, tileIndex, true);
-        }
+        this.redrawTile(tileIndex);
         let expected_stack_index = stack_index === -1 ? this.animationIntervals.length : stack_index;
         let timerId = setTimeout(()=>{
             this.animateTile(layer, tileIndex, tile, pX, pY, ++animation_index, expected_stack_index)
         }, animation.duration);
         if (stack_index === -1){
             this.animationIntervals.push(timerId);
+            this.restoreTiles.push(() =>{
+                layer.data[tileIndex] = tile.info.animation[0].tileid + tile.tilesetFirstGid;
+                clearTimeout(this.animationIntervals[expected_stack_index]);
+            })
         }
         else{
-            this.animationIntervals[stack_index] = timerId;
+            this.animationIntervals[expected_stack_index] = timerId;
         }
     }
 
+    private redrawTile(tileIndex: number, noAnimate: boolean = true) {
+        for (let layer of this.tLayer) {
+            this.drawTile(layer, tileIndex, noAnimate);
+        }
+    }
+
+    redrawSector(x: number, y: number, w: number, h: number){
+        //TODO
+    }
+
     private clearAnimations(){
-        for (let timerId of this.animationIntervals){
-            clearTimeout(timerId)
+        for (let restoreFunc of this.restoreTiles){
+            restoreFunc();
         }
         this.animationIntervals.length = 0;
+        this.restoreTiles.length = 0;
     }
 
     getTileset(tileIndex: number): LoadedTileSet {
@@ -316,7 +342,6 @@ export class MapManager {
             this.view.x = this.mapSize.x - this.view.w;
         else
             this.view.x = x - (this.view.w / 2);
-
         if (this.mapSize.y < this.view.h)
             this.view.y = -Math.floor((this.view.h - this.mapSize.y) / 2);
         else if(y < this.view.h / 2)
@@ -329,6 +354,17 @@ export class MapManager {
 
     centerAtTile(x: number, y: number){
         this.centerAtCoords(x * this.tSize.x, y * this.tSize.y)
+    }
+
+    scrollByY(deltaY: number){
+        if (this.mapSize.y > this.view.h){
+            /*if (this.view.y < this.view.h / 2)
+                this.view.y = this.view.h / 2;
+            else if (this.view.y > this.mapSize.y - this.view.h / 2)
+                this.view.y = this.mapSize.y - this.view.h / 2;*/
+            this.centerAtCoords(this.view.x, this.view.y + this.view.h /2 + deltaY);
+            this.draw();
+        }
     }
 
     isVisible(x: number, y: number, width: number, height: number): boolean {
