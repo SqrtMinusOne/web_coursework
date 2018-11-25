@@ -97,7 +97,7 @@ export class MapManager {
     private xCount: number;
     private yCount: number;
     private tSize: { x: number, y: number };
-    private mapSize: { x: number, y: number };
+    public mapSize: { x: number, y: number };
     private tilesets: LoadedTileSet[];
     private imgLoadCount: number;
     private imgLoaded: boolean;
@@ -219,6 +219,8 @@ export class MapManager {
     private drawTile(layer: TileLayer, tileIndex: number, noAnimate: boolean = false) {
         if (layer.data[tileIndex] !== 0) {
             let tile = this.getTile(layer.data[tileIndex]);
+            if (!tile)
+                return;
             let pX = (tileIndex % this.xCount) * this.tSize.x;
             let pY = Math.floor(tileIndex / this.xCount) * this.tSize.y;
             if (!this.isVisible(pX, pY, this.tSize.x, this.tSize.y))
@@ -231,7 +233,7 @@ export class MapManager {
             this.ctx.stroke();*/
             if (tile.info) {
                 if (tile.info.animation && !noAnimate){
-                    this.animateTile(layer, tileIndex, tile, pX, pY);
+        //            this.animateTile(layer, tileIndex, tile, pX, pY);
                 }
             }
         }
@@ -246,6 +248,8 @@ export class MapManager {
             info: undefined
         };
         let tileset = this.getTileset(tileIndex);
+        if (!tileset)
+            return null;
         tile.img = tileset.image;
         let id = tileIndex - tileset.firstgid;
         let x = id % tileset.xCount;
@@ -297,14 +301,57 @@ export class MapManager {
         }
     }
 
+    redrawSector(x: number, y: number, w: number, h: number){
+        if (!this.isLoaded){
+            setTimeout(()=>{this.redrawSector(x, y, w, h)}, 100);
+            return;
+        }
+        this.mapToSector(x, y, w, h, (x, y)=>{
+            this.redrawTile(this.getTileIndex(x, y), true);
+        });
+    }
+
     private redrawTile(tileIndex: number, noAnimate: boolean = true) {
         for (let layer of this.tLayer) {
             this.drawTile(layer, tileIndex, noAnimate);
         }
     }
 
-    redrawSector(x: number, y: number, w: number, h: number){
-        //TODO
+    getSectorType(x: number, y: number, w: number, h: number): string[]{
+        if (!this.isLoaded){
+            throw new Error('Tried to get sector type before loading');
+        }
+        let res = [];
+        this.mapToSector(x, y, w, h, (x, y)=>{
+            for (let layer of this.tLayer){
+                let tile = this.getTile(layer.data[this.getTileIndex(x, y)]);
+                if (tile && tile.info && tile.info.type){
+/*                    this.ctx.fillStyle = "green";
+                    this.ctx.fillRect(x - this.view.x, y - this.view.y, w, h);*/
+                    if ((res.indexOf(tile.info.type) == -1))
+                        res.push(tile.info.type);
+                }
+            }
+        });
+        return res;
+    }
+
+    mapToSector(x: number, y: number, w: number, h: number, callback: (x: number, y: number)=>void){
+        let cx = Math.floor(x / this.tSize.x) * this.tSize.x;
+        let cy = Math.floor(y / this.tSize.y)*  this.tSize.y;
+        let cw = Math.ceil((w + x - cx) / this.tSize.x) * this.tSize.x;
+        let ch = Math.ceil((h + y - cy ) / this.tSize.y) * this.tSize.y;
+/*        this.ctx.strokeStyle = "red";
+        this.ctx.rect(x - this.view.x,y - this.view.y, w, h);
+        this.ctx.stroke();
+        this.ctx.strokeStyle = "black";
+        this.ctx.rect(cx - this.view.x, cy - this.view.y, cw, ch);
+        this.ctx.stroke();*/
+        for (let dx=0; dx<cw; dx+=this.tSize.x){
+            for (let dy=0; dy<ch; dy+=this.tSize.y){
+                callback(cx + dx, cy + dy)
+            }
+        }
     }
 
     private clearAnimations(){
@@ -327,10 +374,14 @@ export class MapManager {
     getTilesetIds(x: number, y: number){
         let res:number[] = [];
         for (let layer of this.tLayer) {
-            let id = (Math.floor(y / this.tSize.y)) * this.xCount + Math.floor(x / this.tSize.x);
+            let id = this.getTileIndex(x, y);
             res.push(layer.data[id]);
         }
         return res;
+    }
+
+    private getTileIndex(x: number, y: number) {
+        return (Math.floor(y / this.tSize.y)) * this.xCount + Math.floor(x / this.tSize.x);
     }
 
     centerAtCoords(x:number, y: number){
@@ -358,10 +409,6 @@ export class MapManager {
 
     scrollByY(deltaY: number){
         if (this.mapSize.y > this.view.h){
-            /*if (this.view.y < this.view.h / 2)
-                this.view.y = this.view.h / 2;
-            else if (this.view.y > this.mapSize.y - this.view.h / 2)
-                this.view.y = this.mapSize.y - this.view.h / 2;*/
             this.centerAtCoords(this.view.x, this.view.y + this.view.h /2 + deltaY);
             this.draw();
         }

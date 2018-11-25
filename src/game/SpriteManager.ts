@@ -124,6 +124,11 @@ export class SpriteManager{
                 index = this.addDrawnSprite(sprite);
             }
             else{
+                if (this.drawnSprites[index]){
+                    let oldSprite = this.drawnSprites[index];
+                    this.mapManager.redrawSector(oldSprite.coords.x - 5, oldSprite.coords.y - 5,
+                        oldSprite.h + 5, oldSprite.w + 5);
+                }
                 this.drawnSprites[index] = sprite;
             }
             if (!this.mapManager.isVisible(x, y, sprite.w, sprite.h)){
@@ -133,7 +138,7 @@ export class SpriteManager{
             this.ctx.translate(x + sprite.w / 2, y + sprite.h / 2);
             this.ctx.rotate(angle * Math.PI/180);
             this.ctx.drawImage(this.image, sprite.x, sprite.y, sprite.w, sprite.h,
-                0 - sprite.w / 2, 0 - sprite.h / 2, sprite.w, sprite.h);
+                0 - sprite.w / 2 - 2, 0 - sprite.h / 2 - 1, sprite.w, sprite.h);
             this.ctx.restore();
         }
         return index;
@@ -163,12 +168,16 @@ export class SpriteManager{
         delete this.drawnSprites[index];
     }
 
-    private getSprite(name: string): LoadedSprite {
+    getSprite(name: string): LoadedSprite {
         for (let loadedSprite of this.sprites){
             if (loadedSprite.name === name)
                 return loadedSprite;
         }
         return null
+    }
+
+    getSpriteByIndex(index: number): LoadedSprite{
+        return this.sprites[index];
     }
 
 }

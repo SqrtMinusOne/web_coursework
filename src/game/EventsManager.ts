@@ -1,28 +1,56 @@
-import {MapManager} from "./MapManager";
+export const MOUSE_WHEEL = 'mouseWheel';
+export const MOUSE_DOWN = 'mouseDown';
+export const MOUSE_UP = 'mouseUp';
+export const KEY_DOWN = 'keyDown';
+export const KEY_UP = 'keyUp';
 
 export class EventsManager {
-    private mapManager: MapManager;
-    constructor(canvas: HTMLCanvasElement, mapManager: MapManager){
-        this.mapManager = mapManager;
+    private handlers: {[event_name: string] : ((event)=>void)[]};
+
+    constructor(canvas: HTMLCanvasElement){
         canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
         canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
         document.body.addEventListener('keydown', this.onKeyDown.bind(this));
         document.body.addEventListener('keyup', this.onKeyUp.bind(this));
         canvas.addEventListener('wheel', this.onMouseWheel.bind(this));
+        this.handlers = {}
     }
+
+    private callHandler(event_name:string, event){
+        if (!(event_name in this.handlers))
+            return;
+        for (let handler of this.handlers[event_name]) {
+            if (handler){
+                handler(event);
+            }
+        }
+    }
+
+    addHandler(event_name: string, handler: (event)=>void){
+        let i: number;
+        if (!(event_name in this.handlers)){
+            this.handlers[event_name] = [];
+        }
+        for (i = 0; i < this.handlers[event_name].length; i++) {
+            if (!this.handlers[event_name][i])
+                break;
+        }
+        this.handlers[event_name][i] = handler;
+    }
+
     private onMouseDown(event: MouseEvent){
-        console.log(`MouseDown: ${event.clientX}, ${event.clientY}`)
+        this.callHandler(MOUSE_DOWN, event);
     }
     private onMouseUp(event: MouseEvent){
-        console.log(`MouseUp: ${event.clientX}, ${event.clientY}`);
+        this.callHandler(MOUSE_UP, event);
     }
     private onKeyDown(event: KeyboardEvent){
-        console.log("KeyDown " + event.key)
+        this.callHandler(KEY_DOWN, event);
     }
     private onKeyUp(event: KeyboardEvent){
-        console.log("KeyUp " + event.key)
+        this.callHandler(KEY_UP, event);
     }
     private onMouseWheel(event: WheelEvent) {
-        this.mapManager.scrollByY(event.wheelDelta/120*32*2);
+        this.callHandler(MOUSE_WHEEL, event);
     }
 }
