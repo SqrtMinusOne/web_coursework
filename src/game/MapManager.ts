@@ -91,7 +91,6 @@ interface LoadedTileInfo {
 }
 
 export class MapManager {
-
     private mapData: MapJSON;
     private tLayer: TileLayer[];
     private xCount: number;
@@ -233,7 +232,7 @@ export class MapManager {
             this.ctx.stroke();*/
             if (tile.info) {
                 if (tile.info.animation && !noAnimate){
-        //            this.animateTile(layer, tileIndex, tile, pX, pY);
+                    this.animateTile(layer, tileIndex, tile, pX, pY);
                 }
             }
         }
@@ -319,7 +318,8 @@ export class MapManager {
 
     getSectorType(x: number, y: number, w: number, h: number): string[]{
         if (!this.isLoaded){
-            throw new Error('Tried to get sector type before loading');
+            console.log('Tried to get sector type before loading');
+            return;
         }
         let res = [];
         this.mapToSector(x, y, w, h, (x, y)=>{

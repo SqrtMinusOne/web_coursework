@@ -8,13 +8,16 @@ export abstract class Entity{
     private _w: number = 0;
     private _h: number = 0;
     private _angle: number;
-    // Properties
+    // Properties (for children to override)
     protected _isDestructible: boolean = false;
     protected _isRotatable: boolean = false;
     protected _isMovable: boolean = false;
+    protected _speed: number = 0;
+    protected _max_hp: number = -2;
+    protected _hp: number = -2;
     // Drawing parameters
     private _index: number = -1;
-    private spriteManager: SpriteManager;
+    protected spriteManager: SpriteManager;
     private _isLoaded: boolean = false;
     // Game stuff
     protected _team: number = -1;
@@ -29,7 +32,9 @@ export abstract class Entity{
     }
 
     draw(){ //Must be called in child constructor
-        this._index = this.spriteManager.drawSpite(this.spriteName, this.x, this.y, this.angle, this._index);
+        let cur_hp = this.max_hp > 0 ? this.hp / this.max_hp * 100 : -1;
+        this._index = this.spriteManager.drawSpite(this.spriteName, this.x, this.y, this.angle,
+            this._index, true, cur_hp);
         if (this.w === 0 || this.h === 0){
             this.getGeometry();
         }
@@ -55,7 +60,35 @@ export abstract class Entity{
         }
     }
 
+    moveForward(){
+        let dx = Math.round(this.speed * Math.sin(this.angle * Math.PI / 180));
+        let dy = Math.round(this.speed * Math.cos(this.angle * Math.PI / 180));
+        this.move(dx, dy);
+    }
+
+    rotate(dAngle: number){
+        if (this.isRotatable){
+            this._angle += dAngle;
+            this.draw();
+        }
+    }
+
+    takeDamage(damage: number){
+        if (this.isDestructible){
+            this._hp -= damage;
+            if (this._hp < 0){
+                this.destroy();
+            }
+        }
+    }
+
+    destroy(){
+        this.physicsManager.removeEntity(this);
+        this.spriteManager.removeSprite(this.index);
+    }
+
     abstract get spriteName(): string;
+
     get index(): number { return this._index; }
     get y(): number { return this._y; }
     get x(): number { return this._x; }
@@ -67,4 +100,7 @@ export abstract class Entity{
     get isMovable(): boolean { return this._isMovable; }
     get team(): number { return this._team; }
     get isLoaded(): boolean { return this._isLoaded; }
+    get speed(): number { return this._speed; }
+    get hp(): number { return this._hp; }
+    get max_hp(): number { return this._max_hp; }
 }

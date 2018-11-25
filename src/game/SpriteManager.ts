@@ -107,30 +107,32 @@ export class SpriteManager{
         this.jsonLoaded = true;
     }
 
-    drawSpite(name: string, x: number, y: number, angle: number = 0, index: number = -1): number{
+    drawSpite(name: string, x: number, y: number, angle: number = 0, index: number = -1,
+              redraw: boolean = true, hp: number = -1): number{
         if (!this.isLoaded){
             if (index === -1){
                 index = this.addDrawnSprite(null);
             }
-            setTimeout(()=>{this.drawSpite(name, x, y, angle, index)}, 100);
+            setTimeout(()=>{this.drawSpite(name, x, y, angle, index, redraw, hp)}, 100);
         }
         else{
             let sprite = <DrawnSprite>this.getSprite(name);
-            sprite.coords = {x: x, y: y};
-            sprite.angle = angle;
+            if (!sprite) return;
             x -= this.mapManager.view.x;
             y -= this.mapManager.view.y;
             if (index === -1){
                 index = this.addDrawnSprite(sprite);
             }
             else{
-                if (this.drawnSprites[index]){
+                if (this.drawnSprites[index] && redraw){
                     let oldSprite = this.drawnSprites[index];
-                    this.mapManager.redrawSector(oldSprite.coords.x - 5, oldSprite.coords.y - 5,
-                        oldSprite.h + 5, oldSprite.w + 5);
+                    this.mapManager.redrawSector(oldSprite.coords.x, oldSprite.coords.y,
+                        oldSprite.h, oldSprite.w);
                 }
                 this.drawnSprites[index] = sprite;
             }
+            sprite.coords = {x: x, y: y};
+            sprite.angle = angle;
             if (!this.mapManager.isVisible(x, y, sprite.w, sprite.h)){
                 return index;
             }
@@ -140,6 +142,20 @@ export class SpriteManager{
             this.ctx.drawImage(this.image, sprite.x, sprite.y, sprite.w, sprite.h,
                 0 - sprite.w / 2 - 2, 0 - sprite.h / 2 - 1, sprite.w, sprite.h);
             this.ctx.restore();
+            if (hp > 0) {
+                this.ctx.beginPath();
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeStyle = "#ba0002";
+                this.ctx.moveTo(x, y);
+                this.ctx.lineTo(x + sprite.w, y);
+                this.ctx.stroke();
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = "#00801a";
+                this.ctx.moveTo(x, y);
+                this.ctx.lineTo(x + sprite.w / 100 * hp, y);
+                this.ctx.stroke();
+            }
+            this.redrawSpritesInSector(sprite.coords.x, sprite.coords.y, sprite.w, sprite.h, index);
         }
         return index;
     }
@@ -159,12 +175,32 @@ export class SpriteManager{
         for (let i = 0; i < this.drawnSprites.length; i++){
             let drawnSprite = this.drawnSprites[i];
             if (drawnSprite){
-                this.drawSpite(drawnSprite.name, drawnSprite.coords.x, drawnSprite.coords.y, drawnSprite.angle, i);
+                this.drawSpite(drawnSprite.name, drawnSprite.coords.x, drawnSprite.coords.y, drawnSprite.angle, i, false);
+            }
+        }
+    }
+    private static intersection(a1: number, a2: number, b1: number, b2: number): boolean{
+        return ((b1 < a1) && (a1 < b2)) || ((b1 < a2) && (a2 < b2));
+
+    }
+
+    private redrawSpritesInSector(x: number, y: number, w: number, h: number, exclude: number){
+        if (!this.drawnSprites)
+            return;
+        for (let i = 0; i < this.drawnSprites.length; i++){
+            let drawnSprite = this.drawnSprites[i];
+            if (drawnSprite && i<exclude &&
+                SpriteManager.intersection(x, x + w, drawnSprite.coords.x, drawnSprite.coords.x + drawnSprite.w) &&
+                SpriteManager.intersection(y, y + h, drawnSprite.coords.y, drawnSprite.coords.y + drawnSprite.h)) {
+                this.drawSpite(drawnSprite.name, drawnSprite.coords.x, drawnSprite.coords.y, drawnSprite.angle, i, false);
             }
         }
     }
 
     removeSprite(index: number){
+        let sprite = this.drawnSprites[index];
+        this.mapManager.redrawSector(sprite.coords.x, sprite.coords.y, sprite.w, sprite.h);
+        this.redrawSpritesInSector(sprite.coords.x, sprite.coords.y, sprite.w, sprite.h, index);
         delete this.drawnSprites[index];
     }
 

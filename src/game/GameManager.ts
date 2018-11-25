@@ -4,6 +4,7 @@ import {EventsManager, MOUSE_DOWN, MOUSE_WHEEL} from "./EventsManager";
 import {PhysicsManager} from "./PhysicsManager";
 import {Tank} from "./entities/Tank";
 import {Entity} from "./entities/Entity";
+import {Explosion} from "./entities/Explosion";
 
 
 export class GameManager{
@@ -19,9 +20,10 @@ export class GameManager{
         this.physicsManager = new PhysicsManager(this.mapManager);
         this.mapManager.draw();
         this.physicsManager.addEntity(new Tank(this.spriteManager, this.physicsManager, 0,
-            0, 90, 2, 1));
+            70, 90, 2, 1));
+        this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, 64,64));
         setInterval(()=>{
-            this.physicsManager.entities[0].move(5, 0);
+            this.physicsManager.entities[0].moveForward();
         }, 100);
         this.setUpEvents();
     }
