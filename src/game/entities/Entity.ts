@@ -23,6 +23,9 @@ export abstract class Entity{
     // Game stuff
     protected _team: number = -1;
     protected physicsManager: PhysicsManager;
+    // AI stuff
+    protected _action: any;
+    static updateSpeed: number = 75;
 
     protected constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, x: number, y: number, angle: number){
         this._x = x;
@@ -93,11 +96,28 @@ export abstract class Entity{
 
     abstract get spriteName(): string;
 
+    getDistanceTo(x: number, y: number): number{
+        return Math.sqrt((x - this.centerX)**2 + (y - this.centerY)**2);
+    }
+
+    getAngleTo(x: number, y: number): number{
+        let dX = x - this.centerX;
+        let dY = y - this.centerY;
+        let relAngle=Math.atan(dY / dX) / Math.PI * 180;
+        return this._angle + Math.round(relAngle);
+    }
+
+    protected dropAction(){
+        clearTimeout(this._action);
+    }
+
     get index(): number { return this._index; }
     get y(): number { return this._y; }
     get x(): number { return this._x; }
     get h(): number { return this._h; }
     get w(): number { return this._w; }
+    get centerX(): number { return this._x + this.w / 2 }
+    get centerY(): number { return this._y + this.h / 2 }
     get angle(): number { return this._angle; }
     get isDestructible(): boolean { return this._isDestructible; }
     get isRotatable(): boolean { return this._isRotatable; }

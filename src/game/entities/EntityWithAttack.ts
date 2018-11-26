@@ -14,14 +14,54 @@ export abstract class EntityWithAttack extends Entity{
         super(spriteManager, physicsManager, x, y, angle);
     }
 
-    fire(dx: number, dy: number, callback?: ()=>void){
+    fire(x: number, y: number, callback?: () => void){
+        let {gX, gY} = this.getGunRelativeCoords();
+        new Beam(this.spriteManager, this.x + gX, this.y + gY, x,
+            y, this.team, callback);
+    }
+
+    getGunRelativeCoords(): {gX: number, gY: number} {
         let angle = this.angle * Math.PI / 180;
         let cX = this._w / 2;
         let cY = this._h / 2;
-        let gX = Math.cos(angle)*(this._gun_x - cX) - Math.sin(angle)*(this._gun_y - cY) + cX;
-        let gY = Math.sin(angle)*(this._gun_x - cX) + Math.cos(angle)*(this._gun_y - cY) + cY;
-        new Beam(this.spriteManager, this.x + gX, this.y + gY, this.x + 60,
-            this.y + 60, this.team, callback);
+        let gX = Math.cos(angle) * (this._gun_x - cX) - Math.sin(angle) * (this._gun_y - cY) + cX;
+        let gY = Math.sin(angle) * (this._gun_x - cX) + Math.cos(angle) * (this._gun_y - cY) + cY;
+        return {gX, gY};
+    }
+
+    getEnemies(): Entity[]{
+        let cX = this._w / 2;
+        let cY = this._h / 2;
+        let all = this.physicsManager.entitiesInRange(cX, cY, this._range);
+        let res: Entity[] = [];
+        for (let entity of all) {
+            if (entity.isDestructible && entity.team != this.team){
+                res.push(entity);
+            }
+        }
+        return res;
+    }
+
+    attackEnemy(enemy: Entity): boolean{
+        if (!enemy){
+            return false;
+        }
+        let angle = this.getAngleTo(enemy.centerX, enemy.centerY);
+        if (Math.abs(angle) > 15){
+            let angleToRotate = angle > 0 ? -15 : 15;
+            this.rotate(angleToRotate);
+            this._action = setTimeout(()=>{this.attackEnemy(enemy)}, Entity.updateSpeed);
+            return true;
+        }
+        if (this.getDistanceTo(enemy.centerX, enemy.centerY) <= this.range){
+            this.fire(enemy.centerX, enemy.centerY);
+        }
+        else{
+            this.moveForward();
+            this._action = setTimeout(()=>{this.attackEnemy(enemy)}, Entity.updateSpeed);
+            return true;
+        }
+
     }
 
     get range(): number { return this._range; }

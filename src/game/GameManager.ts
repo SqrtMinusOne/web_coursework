@@ -4,6 +4,7 @@ import {EventsManager, MOUSE_DOWN, MOUSE_WHEEL} from "./EventsManager";
 import {PhysicsManager} from "./PhysicsManager";
 import {Tank} from "./entities/Tank";
 import {EntityWithAttack} from "./entities/EntityWithAttack";
+import {Entity} from "./entities/Entity";
 
 export class GameManager{
     private mapManager: MapManager;
@@ -17,10 +18,8 @@ export class GameManager{
         this.eventsManager = new EventsManager(canvas);
         this.physicsManager = new PhysicsManager(this.mapManager);
         this.mapManager.draw();
-        this.physicsManager.addEntity(new Tank(this.spriteManager, this.physicsManager, 0,
-            320, 90, 2, 1));
         // this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, 64,256));
-        setInterval(()=>{
+/*        setInterval(()=>{
             if(this.physicsManager.entities[0]) {
                 let tank: EntityWithAttack = <EntityWithAttack>this.physicsManager.entities[0];
                 tank.rotate(5);
@@ -31,10 +30,12 @@ export class GameManager{
         setInterval(()=>{
             if(this.physicsManager.entities[0]) {
                 let tank: EntityWithAttack = <EntityWithAttack>this.physicsManager.entities[0];
-                tank.fire(64,64)
+                tank.fire(64, 64)
                 // this.physicsManager.entities[0].takeDamage(1);
             }
-        }, 1000);
+        }, 1000);*/
+        let tank1 = this.createEnitity('tank', 0, 320, 0, 1, 2);
+        let tank2 =  this.createEnitity('tank', 290, 320, 0, 2, 2 );
         this.setUpEvents();
     }
 
@@ -43,10 +44,15 @@ export class GameManager{
             this.mapManager.scrollByY(-event.wheelDelta/120*32*2);
         });
         this.eventsManager.addHandler(MOUSE_DOWN, (event: MouseEvent)=>{
-            /* let x = event.clientX + this.mapManager.view.x - 12;
-             let y = event.clientY + this.mapManager.view.y - 12;
-             console.log(this.physicsManager.isPassable(x, y,
-                 this.physicsManager.entities[0]));*/
+
         })
+    }
+
+    createEnitity(name: string, x: number, y: number, angle: number = 0, team?: number, type?: number): Entity{
+        let entity: Entity;
+        switch(name){
+            case 'tank': entity = new Tank(this.spriteManager, this.physicsManager, x, y, angle, team, type); break;
+        }
+        return entity;
     }
 }

@@ -11,8 +11,9 @@ export class PhysicsManager {
         this._entities = [];
     }
 
-    addEntity(entity: Entity){
+    addEntity(entity: Entity): Entity{
         this._entities[entity.index] = entity;
+        return entity
     }
 
     removeEntity(entity: Entity){
@@ -26,6 +27,18 @@ export class PhysicsManager {
         }
         let types = this._mapManager.getSectorType(x, y, entity.w, entity.h);
         return types.indexOf('imp') === -1;
+    }
+
+    entitiesInRange(x: number, y: number, r: number): Entity[]{
+        let res: Entity[] = [];
+        for (let entity of this._entities){
+            if (entity){
+                if (entity.getDistanceTo(x,y) < r){
+                    res.push(entity);
+                }
+            }
+        }
+        return res;
     }
 
     get entities(): Entity[] {

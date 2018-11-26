@@ -8,7 +8,7 @@ export class Explosion extends Entity{
     constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, x: number, y: number) {
         super(spriteManager, physicsManager, x, y, 0);
         this.draw();
-        setTimeout(()=>{this.processExplosion()}, 75);
+        setTimeout(()=>{this.processExplosion()}, Entity.updateSpeed);
     }
 
     private static getName(i: number){
@@ -19,7 +19,7 @@ export class Explosion extends Entity{
         if (this.ind < 16){
             this.ind += 1;
             this.draw();
-            setTimeout(()=>{this.processExplosion()}, 75);
+            setTimeout(()=>{this.processExplosion()}, Entity.updateSpeed);
         }
         else{
             this.destroy();

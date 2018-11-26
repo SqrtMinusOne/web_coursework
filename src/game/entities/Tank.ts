@@ -23,6 +23,7 @@ export class Tank extends EntityWithAttack{
         this._hp = this._max_hp;
         this._gun_x = 16;
         this._gun_y = 3;
+        this._range = 5;
         this.draw();
     }
 
@@ -30,8 +31,10 @@ export class Tank extends EntityWithAttack{
         return this.fired ? this.sprite_name + '_fire' : this.sprite_name;
     }
 
-    fire(dx: number, dy: number): void {
-        super.fire(dx, dy, ()=>{this.fired = false});
+    fire(x: number, y: number): void {
+        super.fire(x, y, () => {
+            this.fired = false
+        });
         this.fired = true;
     }
 

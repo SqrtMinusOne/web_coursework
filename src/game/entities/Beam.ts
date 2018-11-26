@@ -38,7 +38,7 @@ export class Beam{
             setTimeout(this.processBeam.bind(this), 100);
         }
         else{
-            setTimeout(this.destroy.bind(this), 255);
+            setTimeout(this.destroy.bind(this), Entity.updateSpeed * 3);
         }
     }
 
