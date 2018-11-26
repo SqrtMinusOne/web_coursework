@@ -2,8 +2,9 @@ import {Entity} from "./Entity";
 import {SpriteManager} from "../SpriteManager";
 import {PhysicsManager} from "../PhysicsManager";
 import {Explosion} from "./Explosion";
+import {EntityWithAttack} from "./EntityWithAttack";
 
-export class Tank extends Entity{
+export class Tank extends EntityWithAttack{
     private sprite_name: string;
     private speeds = [4, 5, 3, 2];
     private hps = [50, 35, 75, 100];
@@ -18,7 +19,7 @@ export class Tank extends Entity{
         this.sprite_name = `${team === 1 ? 'red_tank_' : 'blue_tank_'}${type}`;
         this._speed = this.speeds[type - 1];
         this._max_hp = this.hps[type - 1];
-        this._hp = this._max_hp - 10;
+        this._hp = this._max_hp;
         this.draw();
     }
 

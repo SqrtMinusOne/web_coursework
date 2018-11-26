@@ -3,7 +3,7 @@ import {SpriteManager} from "../SpriteManager";
 import {PhysicsManager} from "../PhysicsManager";
 
 export class Explosion extends Entity{
-    private ind: number = 0;
+    private ind: number = 1;
 
     constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, x: number, y: number) {
         super(spriteManager, physicsManager, x, y, 0);

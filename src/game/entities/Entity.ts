@@ -9,6 +9,7 @@ export abstract class Entity{
     private _h: number = 0;
     private _angle: number;
     // Properties (for children to override)
+    // TODO Maybe mixins?
     protected _isDestructible: boolean = false;
     protected _isRotatable: boolean = false;
     protected _isMovable: boolean = false;
@@ -31,7 +32,7 @@ export abstract class Entity{
         this.physicsManager = physicsManager;
     }
 
-    draw(){ //Must be called in child constructor
+    draw(){
         let cur_hp = this.max_hp > 0 ? this.hp / this.max_hp * 100 : -1;
         this._index = this.spriteManager.drawSpite(this.spriteName, this.x, this.y, this.angle,
             this._index, true, cur_hp);
@@ -40,7 +41,7 @@ export abstract class Entity{
         }
     }
 
-    private getGeometry() {
+    private getGeometry() { //Must be called in child constructor through draw or directly
         if (!this.spriteManager.isLoaded){
             setTimeout(()=>{this.getGeometry()}, 100);
         }
@@ -62,7 +63,7 @@ export abstract class Entity{
 
     moveForward(){
         let dx = Math.round(this.speed * Math.sin(this.angle * Math.PI / 180));
-        let dy = Math.round(this.speed * Math.cos(this.angle * Math.PI / 180));
+        let dy = -Math.round(this.speed * Math.cos(this.angle * Math.PI / 180));
         this.move(dx, dy);
     }
 

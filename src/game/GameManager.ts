@@ -20,10 +20,14 @@ export class GameManager{
         this.physicsManager = new PhysicsManager(this.mapManager);
         this.mapManager.draw();
         this.physicsManager.addEntity(new Tank(this.spriteManager, this.physicsManager, 0,
-            70, 90, 2, 1));
-        this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, 64,64));
-        setInterval(()=>{
-            this.physicsManager.entities[0].moveForward();
+            320, 90, 2, 1));
+       // this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, 64,256));
+      setInterval(()=>{
+            if(this.physicsManager.entities[0]) {
+                this.physicsManager.entities[0].rotate(5);
+                this.physicsManager.entities[0].moveForward();
+               // this.physicsManager.entities[0].takeDamage(1);
+            }
         }, 100);
         this.setUpEvents();
     }

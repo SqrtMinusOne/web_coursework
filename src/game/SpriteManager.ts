@@ -118,8 +118,6 @@ export class SpriteManager{
         else{
             let sprite = <DrawnSprite>this.getSprite(name);
             if (!sprite) return;
-            x -= this.mapManager.view.x;
-            y -= this.mapManager.view.y;
             if (index === -1){
                 index = this.addDrawnSprite(sprite);
             }
@@ -136,6 +134,8 @@ export class SpriteManager{
             if (!this.mapManager.isVisible(x, y, sprite.w, sprite.h)){
                 return index;
             }
+            x -= this.mapManager.view.x;
+            y -= this.mapManager.view.y;
             this.ctx.save();
             this.ctx.translate(x + sprite.w / 2, y + sprite.h / 2);
             this.ctx.rotate(angle * Math.PI/180);
@@ -158,6 +158,15 @@ export class SpriteManager{
             this.redrawSpritesInSector(sprite.coords.x, sprite.coords.y, sprite.w, sprite.h, index);
         }
         return index;
+    }
+
+    drawProjectile(x1: number, y1: number, x2: number, y2: number, color: string){
+        this.ctx.beginPath();
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = color;
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(x2, y2);
+        this.ctx.stroke();
     }
 
     private addDrawnSprite(sprite: DrawnSprite | null){
@@ -199,7 +208,7 @@ export class SpriteManager{
 
     removeSprite(index: number){
         let sprite = this.drawnSprites[index];
-        this.mapManager.redrawSector(sprite.coords.x, sprite.coords.y, sprite.w, sprite.h);
+        this.mapManager.redrawSector(sprite.coords.x, sprite.coords.y-5, sprite.w+5, sprite.h+5);
         this.redrawSpritesInSector(sprite.coords.x, sprite.coords.y, sprite.w, sprite.h, index);
         delete this.drawnSprites[index];
     }
