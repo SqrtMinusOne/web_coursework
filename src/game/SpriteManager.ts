@@ -53,6 +53,7 @@ interface SpriteAtlas {
 export class SpriteManager{
     private image: HTMLImageElement;
     private sprites: LoadedSprite[];
+    private drawnBeams: {x1: number, y1: number, x2: number, y2: number, color: string}[];
     private drawnSprites: DrawnSprite[];
     private atlas: SpriteAtlas;
     private mapManager: MapManager;
@@ -63,6 +64,7 @@ export class SpriteManager{
     constructor(canvas: HTMLCanvasElement, path: string, mapManager: MapManager){
         this.sprites = [];
         this.drawnSprites = [];
+        this.drawnBeams = [];
         this.imgLoaded = false;
         this.jsonLoaded = false;
         this.mapManager = mapManager;
@@ -160,13 +162,44 @@ export class SpriteManager{
         return index;
     }
 
-    drawProjectile(x1: number, y1: number, x2: number, y2: number, color: string){
+    drawBeam(x1: number, y1: number, x2: number, y2: number, color: string, index: number = -1): number{
+        if (index === -1){
+            for (index = 0; index < this.drawnBeams.length; index++) {
+                if (this.drawnBeams[index])
+                    break;
+            }
+        }
+        this.drawnBeams[index] = {x1: x1, y1: y1, x2: x2, y2: y2, color: color};
+        if (!this.isLoaded){
+            setTimeout(()=>{
+                this.drawBeam(x1, y1, x2, y2, color, index);
+            }, 100);
+            return index;
+        }
+        this.redrawSpritesInSector(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x1 - x2), Math.abs(y1 - y2));
+        x1 -= this.mapManager.view.x;
+        y1 -= this.mapManager.view.y;
+        x2 -= this.mapManager.view.x;
+        y2 -= this.mapManager.view.y;
         this.ctx.beginPath();
         this.ctx.lineWidth = 2;
         this.ctx.strokeStyle = color;
         this.ctx.moveTo(x1, y1);
         this.ctx.lineTo(x2, y2);
         this.ctx.stroke();
+        return index
+    }
+
+    removeBeam(index: number){
+        let beam = this.drawnBeams[index];
+        if (beam) {
+            let x = Math.min(beam.x1, beam.x2);
+            let y = Math.min(beam.y1, beam.y2);
+            let w = Math.abs(beam.x2 - beam.x1);
+            let h = Math.abs(beam.y2 - beam.y1);
+            this.mapManager.redrawSector(x, y, w, h);
+            this.redrawSpritesInSector(x, y, w, h);
+        }
     }
 
     private addDrawnSprite(sprite: DrawnSprite | null){
@@ -193,7 +226,8 @@ export class SpriteManager{
 
     }
 
-    private redrawSpritesInSector(x: number, y: number, w: number, h: number, exclude: number){
+    private redrawSpritesInSector(x: number, y: number, w: number, h: number,
+                                  exclude: number = Number.MAX_VALUE){
         if (!this.drawnSprites)
             return;
         for (let i = 0; i < this.drawnSprites.length; i++){

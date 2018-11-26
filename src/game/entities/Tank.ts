@@ -8,6 +8,7 @@ export class Tank extends EntityWithAttack{
     private sprite_name: string;
     private speeds = [4, 5, 3, 2];
     private hps = [50, 35, 75, 100];
+    private fired: boolean = false;
 
     constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, x: number, y: number, angle: number,
                 type: number, team: number) {
@@ -20,11 +21,18 @@ export class Tank extends EntityWithAttack{
         this._speed = this.speeds[type - 1];
         this._max_hp = this.hps[type - 1];
         this._hp = this._max_hp;
+        this._gun_x = 16;
+        this._gun_y = 3;
         this.draw();
     }
 
     get spriteName(): string {
-        return this.sprite_name;
+        return this.fired ? this.sprite_name + '_fire' : this.sprite_name;
+    }
+
+    fire(dx: number, dy: number): void {
+        super.fire(dx, dy, ()=>{this.fired = false});
+        this.fired = true;
     }
 
     destroy() {

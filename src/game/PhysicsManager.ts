@@ -1,5 +1,6 @@
 import {Entity} from "./entities/Entity";
 import {MapManager} from "./MapManager";
+import {EntityWithAttack} from "./entities/EntityWithAttack";
 
 export class PhysicsManager {
     private _mapManager: MapManager;

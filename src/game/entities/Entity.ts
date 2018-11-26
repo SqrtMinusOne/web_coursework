@@ -5,8 +5,8 @@ export abstract class Entity{
     // Geometry
     private _x: number;
     private _y: number;
-    private _w: number = 0;
-    private _h: number = 0;
+    protected _w: number = 0;
+    protected _h: number = 0;
     private _angle: number;
     // Properties (for children to override)
     // TODO Maybe mixins?
@@ -54,6 +54,9 @@ export abstract class Entity{
     }
 
     move(dx: number, dy: number){
+        if (!this.spriteManager.isLoaded) {
+            setTimeout(()=>{this.move(dx, dy)}, 100);
+        }
         if (this.physicsManager.isPassable(this.x + dx, this.y + dy, this)){
             this._x += dx;
             this._y += dy;
