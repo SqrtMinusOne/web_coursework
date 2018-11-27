@@ -780,7 +780,7 @@
         "h": 32
       }
     },
-    "blue_tank_5": {
+    "blue_tank_1_fire": {
       "frame": {
         "x": 32,
         "y": 384,
@@ -840,7 +840,7 @@
         "h": 32
       }
     },
-    "blue_tank_6": {
+    "blue_tank_2_fire": {
       "frame": {
         "x": 32,
         "y": 416,
@@ -900,7 +900,7 @@
         "h": 32
       }
     },
-    "blue_tank_7": {
+    "blue_tank_3_fire": {
       "frame": {
         "x": 32,
         "y": 448,
@@ -960,7 +960,7 @@
         "h": 32
       }
     },
-    "blue_tank_8": {
+    "blue_tank_4_fire": {
       "frame": {
         "x": 32,
         "y": 480,

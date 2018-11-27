@@ -14,6 +14,7 @@ export abstract class Entity{
     protected _isRotatable: boolean = false;
     protected _isMovable: boolean = false;
     protected _speed: number = 0;
+    protected _max_rotate_angle = 0;
     protected _max_hp: number = -2;
     protected _hp: number = -2;
     // Drawing parameters
@@ -24,7 +25,9 @@ export abstract class Entity{
     protected _team: number = -1;
     protected physicsManager: PhysicsManager;
     // AI stuff
+    protected _AICallback: ()=>boolean;
     protected _action: any;
+    private AICalled: boolean = false;
     static updateSpeed: number = 75;
 
     protected constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, x: number, y: number, angle: number){
@@ -67,27 +70,33 @@ export abstract class Entity{
         }
     }
 
-    moveForward(){
+    moveForward(){ // AI Interface
         let dx = Math.round(this.speed * Math.cos(this.angle * Math.PI / 180));
         let dy = Math.round(this.speed * Math.sin(this.angle * Math.PI / 180));
         this.move(dx, dy);
+        this.delayedCallAI();
     }
 
-    rotate(dAngle: number){
+    rotate(dAngle: number){ // AI Interface
         if (this.isRotatable && dAngle != 0){
+            if (this.max_rotate_angle > 0){
+                dAngle = Math.abs(dAngle) > this.max_rotate_angle ?
+                    dAngle / Math.abs(dAngle) * this.max_rotate_angle : dAngle;
+            }
             this._angle -= dAngle;
             this.draw();
         }
+        this.delayedCallAI();
     }
 
     takeDamage(damage: number){
         if (this.isDestructible){
             this._hp -= damage;
-            if (this._hp < 0){
+            if (this._hp <= 0){
                 this.destroy();
             }
             else{
-                this.spriteManager.drawHpBar(this.x, this.y, this.w, this.hp / this.max_hp * 100, this.index);
+                this.spriteManager.drawHpBar(this.x, this.y, this.w, this.hp / this.max_hp * 100, this.index, true);
             }
         }
     }
@@ -106,7 +115,7 @@ export abstract class Entity{
 
     getAngleTo(x: number, y: number): number{
         let dX = x - this.centerX;
-        let dY = y - this.centerY;
+        let dY = - y + this.centerY;
         let angle;
         if (dX > 0)
             angle = Math.atan(dY / dX);
@@ -128,6 +137,25 @@ export abstract class Entity{
         clearTimeout(this._action);
     }
 
+    public initAI(callback: ()=>boolean){
+        this._AICallback = callback;
+        this.delayedCallAI();
+    }
+
+    public delayedCallAI(){
+        if (!this.AICalled) {
+            this.AICalled = true;
+            this._action = setTimeout(this.callAI.bind(this), Entity.updateSpeed);
+        }
+    }
+
+    private callAI(){
+        this.AICalled = false;
+        if (this._AICallback)
+            this._AICallback();
+
+    }
+
     get index(): number { return this._index; }
     get y(): number { return this._y; }
     get x(): number { return this._x; }
@@ -143,7 +171,9 @@ export abstract class Entity{
     get team(): number { return this._team; }
     get isLoaded(): boolean { return this._isLoaded; }
     get speed(): number { return this._speed; }
+    get max_rotate_angle(): number { return this._max_rotate_angle; }
     get hp(): number { return this._hp; }
     get max_hp(): number { return this._max_hp; }
     set action(value: any) { this._action = value; }
+    get isAfk(): boolean { return !this.AICalled }
 }

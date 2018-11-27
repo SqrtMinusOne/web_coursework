@@ -1,4 +1,5 @@
 import {MapManager} from "./MapManager";
+import {assertTSQualifiedName} from "babel-types";
 
 interface Frame {
     x: number,
@@ -110,7 +111,11 @@ export class SpriteManager{
         this.jsonLoaded = true;
     }
 
-    drawHpBar(x: number, y: number, w: number, hp: number, index: number){
+    drawHpBar(x: number, y: number, w: number, hp: number, index: number, relative: boolean = false){
+        if (relative) {
+            x -= this.mapManager.view.x;
+            y -= this.mapManager.view.y;
+        }
         if (hp > 0) {
             this.ctx.beginPath();
             this.ctx.lineWidth = 2;
@@ -137,7 +142,6 @@ export class SpriteManager{
         }
         else{
             let sprite = <DrawnSprite>this.getSprite(name);
-            if (!sprite) return;
             if (index === -1){
                 index = this.addDrawnSprite(sprite);
             }
@@ -145,9 +149,10 @@ export class SpriteManager{
                 if (this.drawnSprites[index]){
                     let oldSprite = this.drawnSprites[index];
                     sprite.hp = oldSprite.hp;
-                    if (redraw)
-                        this.mapManager.redrawSector(oldSprite.coords.x-2, oldSprite.coords.y-2,
-                        oldSprite.w+4, oldSprite.h+4);
+                    if (redraw) {
+                        let sector = SpriteManager.getSector(oldSprite);
+                        this.mapManager.redrawSector(sector.x, sector.y, sector.w, sector.h);
+                    }
                 }
                 this.drawnSprites[index] = sprite;
             }
@@ -164,11 +169,13 @@ export class SpriteManager{
             this.ctx.drawImage(this.image, sprite.x, sprite.y, sprite.w, sprite.h,
                 0 - sprite.w / 2 - 2, 0 - sprite.h / 2 - 1, sprite.w, sprite.h);
             this.ctx.restore();
-            console.log(name, hp, sprite.hp);
             if (hp !== -1) sprite.hp = hp;
             else if (hp === -1 && sprite.hp) hp = sprite.hp;
             this.drawHpBar(x, y, sprite.w, hp, index);
-            this.redrawSpritesInSector(sprite.coords.x, sprite.coords.y, sprite.w, sprite.h, index);
+            if (redraw) {
+                let sector = SpriteManager.getSector(sprite);
+                this.redrawSpritesInSector(sector.x, sector.y, sector.w, sector.h, index);
+            }
         }
         return index;
     }
@@ -176,7 +183,7 @@ export class SpriteManager{
     drawBeam(x1: number, y1: number, x2: number, y2: number, color: string, index: number = -1): number{
         if (index === -1){
             for (index = 0; index < this.drawnBeams.length; index++) {
-                if (this.drawnBeams[index])
+                if (!this.drawnBeams[index])
                     break;
             }
         }
@@ -187,7 +194,7 @@ export class SpriteManager{
             }, 100);
             return index;
         }
-        this.redrawSpritesInSector(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x1 - x2), Math.abs(y1 - y2));
+        //  this.redrawSpritesInSector(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x1 - x2), Math.abs(y1 - y2));
         x1 -= this.mapManager.view.x;
         y1 -= this.mapManager.view.y;
         x2 -= this.mapManager.view.x;
@@ -210,6 +217,7 @@ export class SpriteManager{
             let h = Math.abs(beam.y2 - beam.y1);
             this.mapManager.redrawSector(x, y, w, h);
             this.redrawSpritesInSector(x, y, w, h);
+            delete this.drawnBeams[index];
         }
     }
 
@@ -232,6 +240,30 @@ export class SpriteManager{
             }
         }
     }
+
+    private static rotatePoint(x: number, y: number, cX: number, cY: number, angle: number): {x: number, y: number}{
+        angle *= Math.PI / 180;
+        let rX = Math.cos(angle) * (x - cX) - Math.sin(angle) * (y - cY) + cX;
+        let rY = Math.sin(angle) * (x - cX) + Math.cos(angle) * (y - cY) + cY;
+        return {x: rX, y: rY}
+    }
+
+    private static getSector(sprite: DrawnSprite): {x: number, y: number, w: number, h: number}{
+        let cX = sprite.coords.x + sprite.w / 2;
+        let cY = sprite.coords.y + sprite.h / 2;
+        let p1 = SpriteManager.rotatePoint(sprite.coords.x, sprite.coords.y, cX, cY, sprite.angle);
+        let p2 = SpriteManager.rotatePoint(sprite.coords.x, sprite.coords.y + sprite.h, cX, cY, sprite.angle);
+        let p3 = SpriteManager.rotatePoint(sprite.coords.x + sprite.w, sprite.coords.y, cX, cY, sprite.angle);
+        let p4 = SpriteManager.rotatePoint(sprite.coords.x + sprite.w, sprite.coords.y + sprite.h, cX, cY, sprite.angle);
+        let x1 = Math.min(p1.x, p2.x, p3.x, p4.x);
+        let y1 = Math.min(p1.y, p2.y, p3.y, p4.y);
+        let x2 = Math.max(p1.x, p2.x, p3.x, p4.x);
+        let y2 = Math.max(p1.y, p2.y, p3.y, p4.y);
+        return{
+            x: Math.floor(x1), y: Math.floor(y1), w: Math.ceil(x2 - x1), h: Math.ceil(y2 - y1)
+        }
+    }
+
     private static intersection(a1: number, a2: number, b1: number, b2: number): boolean{
         return ((b1 < a1) && (a1 < b2)) || ((b1 < a2) && (a2 < b2));
 
@@ -243,10 +275,12 @@ export class SpriteManager{
             return;
         for (let i = 0; i < this.drawnSprites.length; i++){
             let drawnSprite = this.drawnSprites[i];
-            if (drawnSprite && i<exclude &&
-                SpriteManager.intersection(x, x + w, drawnSprite.coords.x, drawnSprite.coords.x + drawnSprite.w) &&
-                SpriteManager.intersection(y, y + h, drawnSprite.coords.y, drawnSprite.coords.y + drawnSprite.h)) {
-                this.drawSpite(drawnSprite.name, drawnSprite.coords.x, drawnSprite.coords.y, drawnSprite.angle, i, false);
+            if (drawnSprite && i!=exclude){
+                let sector = SpriteManager.getSector(drawnSprite);
+                if (SpriteManager.intersection(x, x + w, sector.x, sector.x + sector.w) &&
+                    SpriteManager.intersection(y, y + h, sector.y, sector.y + sector.h)) {
+                    this.drawSpite(drawnSprite.name, drawnSprite.coords.x, drawnSprite.coords.y, drawnSprite.angle, i, false);
+                }
             }
         }
     }

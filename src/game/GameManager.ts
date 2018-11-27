@@ -3,7 +3,7 @@ import {SpriteManager} from "./SpriteManager";
 import {EventsManager, MOUSE_DOWN, MOUSE_WHEEL} from "./EventsManager";
 import {PhysicsManager} from "./PhysicsManager";
 import {Tank} from "./entities/Tank";
-import {EntityWithAttack} from "./entities/EntityWithAttack";
+import {TankAI} from './AI/TankAI'
 import {Entity} from "./entities/Entity";
 
 export class GameManager{
@@ -18,26 +18,7 @@ export class GameManager{
         this.eventsManager = new EventsManager(canvas);
         this.physicsManager = new PhysicsManager(this.mapManager);
         this.mapManager.draw();
-        // this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, 64,256));
-/*        setInterval(()=>{
-            if(this.physicsManager.entities[0]) {
-                let tank: EntityWithAttack = <EntityWithAttack>this.physicsManager.entities[0];
-                tank.rotate(5);
-                tank.moveForward();
-                // this.physicsManager.entities[0].takeDamage(1);
-            }
-        }, 100);*/
-/*        setInterval(()=>{
-            if(this.physicsManager.entities[0]) {
-                let tank: EntityWithAttack = <EntityWithAttack>this.physicsManager.entities[0];
-                tank.fire(64, 64)
-                // this.physicsManager.entities[0].takeDamage(1);
-            }
-        }, 1000);*/
-        let tank1 = <Tank>this.createEnitity('tank', 0, 320, 0, 1, 2);
-        let tank2 =  <Tank>this.createEnitity('tank', 290, 320, 0, 2, 2 );
-        tank1.attackEnemy(tank2);
-        tank2.attackEnemy(tank1);
+      //  this.mapManager.startUpdate();
         this.setUpEvents();
     }
 
@@ -46,14 +27,23 @@ export class GameManager{
             this.mapManager.scrollByY(-event.wheelDelta/120*32*2);
         });
         this.eventsManager.addHandler(MOUSE_DOWN, (event: MouseEvent)=>{
-
+            let team;
+            if (event.button === 0)
+                team = 1;
+            else
+                team = 2;
+            this.createEnitity('tank', event.clientX + this.mapManager.view.x,
+                event.clientY + this.mapManager.view.y, 0, team, 2);
         })
     }
 
     createEnitity(name: string, x: number, y: number, angle: number = 0, team?: number, type?: number): Entity{
         let entity: Entity;
         switch(name){
-            case 'tank': entity = new Tank(this.spriteManager, this.physicsManager, x, y, angle, type, team); break;
+            case 'tank':
+                entity = new Tank(this.spriteManager, this.physicsManager, x, y, angle, type, team);
+                new TankAI(entity);
+            break;
         }
         this.physicsManager.addEntity(entity);
         return entity;

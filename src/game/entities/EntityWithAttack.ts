@@ -7,6 +7,7 @@ export abstract class EntityWithAttack extends Entity{
     // Properties (children should override these)
     protected _range: number = 0;
     protected _attack: number = 0;
+    protected _fireRate: number = Entity.updateSpeed;
     protected _gun_x = 0;
     protected _gun_y = 0;
 
@@ -18,6 +19,7 @@ export abstract class EntityWithAttack extends Entity{
         let {gX, gY} = this.getGunRelativeCoords();
         new Beam(this.spriteManager, this.x + gX, this.y + gY, x,
             y, this.team, callback);
+        this.delayedCallAI();
     }
 
     getGunRelativeCoords(): {gX: number, gY: number} {
@@ -29,13 +31,18 @@ export abstract class EntityWithAttack extends Entity{
         return {gX, gY};
     }
 
-    getEnemies(): Entity[]{
-        let cX = this._w / 2;
-        let cY = this._h / 2;
-        let all = this.physicsManager.entitiesInRange(cX, cY, this._range);
-        let res: Entity[] = [];
-        for (let entity of all) {
-            if (entity.isDestructible && entity.team != this.team){
+    getEnemiesInRange(): Entity[]{
+        return this.filterEnemies(this.physicsManager.entitiesInRange(this.centerX, this.centerY, this._range));
+    }
+
+    getAllEnemies(): Entity[]{
+        return this.filterEnemies(this.physicsManager.entities);
+    }
+
+    private filterEnemies(entities: Entity[]){
+        let res = [];
+        for (let entity of entities) {
+            if (entity.isDestructible && entity.team != this.team && !entity.isDestroyed){
                 res.push(entity);
             }
         }
@@ -47,38 +54,7 @@ export abstract class EntityWithAttack extends Entity{
             this.fire(enemy.centerX, enemy.centerY);
             enemy.takeDamage(this._attack);
         }
-    }
-
-    attackEnemy(enemy: Entity): boolean{
-        if (!enemy.isLoaded){
-            this._action = setTimeout(()=>{this.attackEnemy(enemy)}, 100);
-            return true;
-        }
-        if (!enemy){
-            return false;
-        }
-        let angle = this.getAngleTo(enemy.centerX, enemy.centerY);
-        let distance = this.getDistanceTo(enemy.centerX, enemy.centerY);
-        if (Math.abs(angle) > 15){
-            let angleToRotate = angle > 0 ? 15 : -15;
-            this.rotate(angleToRotate);
-            this._action = setTimeout(()=>{this.attackEnemy(enemy)}, Entity.updateSpeed);
-            return true;
-        }
-        if (distance <= this.range){
-            this.fireAtEnemy(enemy);
-            if (!enemy.isDestroyed) {
-                this._action = setTimeout(() => { this.attackEnemy(enemy) }, Entity.updateSpeed * 10);
-                return true;
-            }
-            else return false;
-        }
-        else{
-            this.rotate(angle);
-            this.moveForward();
-            this._action = setTimeout(()=>{this.attackEnemy(enemy)}, Entity.updateSpeed);
-            return true;
-        }
+        this.delayedCallAI();
     }
 
     get range(): number { return this._range; }

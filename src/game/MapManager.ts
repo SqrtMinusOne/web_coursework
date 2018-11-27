@@ -190,6 +190,11 @@ export class MapManager {
         this.tilesets.push(ts);
     }
 
+    startUpdate(){
+        setInterval(this.draw.bind(this), 500);
+    }
+
+
     draw(){
         if (!this.isLoaded){
             setTimeout(()=>{this.draw()}, 100);
@@ -308,6 +313,9 @@ export class MapManager {
         this.mapToSector(x, y, w, h, (x, y)=>{
             this.redrawTile(this.getTileIndex(x, y), true);
         });
+   /*     this.ctx.strokeStyle = "#000000";
+        this.ctx.rect(x - this.view.x, y - this.view.y, w, h);
+        this.ctx.stroke();*/
     }
 
     private redrawTile(tileIndex: number, noAnimate: boolean = true) {

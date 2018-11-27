@@ -9,6 +9,10 @@ export class EventsManager {
 
     constructor(canvas: HTMLCanvasElement){
         canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+        canvas.addEventListener('contextmenu', (event)=>{
+            event.preventDefault();
+            event.stopPropagation();
+        });
         canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
         document.body.addEventListener('keydown', this.onKeyDown.bind(this));
         document.body.addEventListener('keyup', this.onKeyUp.bind(this));
@@ -24,6 +28,7 @@ export class EventsManager {
                 handler(event);
             }
         }
+        event.preventDefault();
     }
 
     addHandler(event_name: string, handler: (event)=>void){
