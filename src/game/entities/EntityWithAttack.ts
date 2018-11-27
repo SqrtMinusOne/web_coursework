@@ -42,26 +42,43 @@ export abstract class EntityWithAttack extends Entity{
         return res;
     }
 
+    fireAtEnemy(enemy: Entity){
+        if (this.getDistanceTo(enemy.centerX, enemy.centerY)) {
+            this.fire(enemy.centerX, enemy.centerY);
+            enemy.takeDamage(this._attack);
+        }
+    }
+
     attackEnemy(enemy: Entity): boolean{
+        if (!enemy.isLoaded){
+            this._action = setTimeout(()=>{this.attackEnemy(enemy)}, 100);
+            return true;
+        }
         if (!enemy){
             return false;
         }
         let angle = this.getAngleTo(enemy.centerX, enemy.centerY);
+        let distance = this.getDistanceTo(enemy.centerX, enemy.centerY);
         if (Math.abs(angle) > 15){
-            let angleToRotate = angle > 0 ? -15 : 15;
+            let angleToRotate = angle > 0 ? 15 : -15;
             this.rotate(angleToRotate);
             this._action = setTimeout(()=>{this.attackEnemy(enemy)}, Entity.updateSpeed);
             return true;
         }
-        if (this.getDistanceTo(enemy.centerX, enemy.centerY) <= this.range){
-            this.fire(enemy.centerX, enemy.centerY);
+        if (distance <= this.range){
+            this.fireAtEnemy(enemy);
+            if (!enemy.isDestroyed) {
+                this._action = setTimeout(() => { this.attackEnemy(enemy) }, Entity.updateSpeed * 10);
+                return true;
+            }
+            else return false;
         }
         else{
+            this.rotate(angle);
             this.moveForward();
             this._action = setTimeout(()=>{this.attackEnemy(enemy)}, Entity.updateSpeed);
             return true;
         }
-
     }
 
     get range(): number { return this._range; }

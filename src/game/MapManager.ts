@@ -216,7 +216,7 @@ export class MapManager {
     }
 
     private drawTile(layer: TileLayer, tileIndex: number, noAnimate: boolean = false) {
-        if (layer.data[tileIndex] !== 0) {
+        if (layer.data[tileIndex] !== 0 && tileIndex >= 0) {
             let tile = this.getTile(layer.data[tileIndex]);
             if (!tile)
                 return;
@@ -341,6 +341,10 @@ export class MapManager {
         let cy = Math.floor(y / this.tSize.y)*  this.tSize.y;
         let cw = Math.ceil((w + x - cx) / this.tSize.x) * this.tSize.x;
         let ch = Math.ceil((h + y - cy ) / this.tSize.y) * this.tSize.y;
+        cx = cx < 0 ? 0 : cx;
+        cy = cy < 0 ? 0 : cy;
+        cw = cx + cw > this.mapSize.x ? this.mapSize.x - cx : cw;
+        ch = cy + ch > this.mapSize.y ? this.mapSize.y - cy : ch;
 /*        this.ctx.strokeStyle = "red";
         this.ctx.rect(x - this.view.x,y - this.view.y, w, h);
         this.ctx.stroke();
@@ -381,7 +385,10 @@ export class MapManager {
     }
 
     private getTileIndex(x: number, y: number) {
-        return (Math.floor(y / this.tSize.y)) * this.xCount + Math.floor(x / this.tSize.x);
+        if (x >= 0 && x <= this.mapSize.x && y >= 0 && y <= this.mapSize.y)
+            return (Math.floor(y / this.tSize.y)) * this.xCount + Math.floor(x / this.tSize.x);
+        else
+            return -1;
     }
 
     centerAtCoords(x:number, y: number){

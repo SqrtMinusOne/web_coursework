@@ -26,16 +26,18 @@ export class GameManager{
                 tank.moveForward();
                 // this.physicsManager.entities[0].takeDamage(1);
             }
-        }, 100);
-        setInterval(()=>{
+        }, 100);*/
+/*        setInterval(()=>{
             if(this.physicsManager.entities[0]) {
                 let tank: EntityWithAttack = <EntityWithAttack>this.physicsManager.entities[0];
                 tank.fire(64, 64)
                 // this.physicsManager.entities[0].takeDamage(1);
             }
         }, 1000);*/
-        let tank1 = this.createEnitity('tank', 0, 320, 0, 1, 2);
-        let tank2 =  this.createEnitity('tank', 290, 320, 0, 2, 2 );
+        let tank1 = <Tank>this.createEnitity('tank', 0, 320, 0, 1, 2);
+        let tank2 =  <Tank>this.createEnitity('tank', 290, 320, 0, 2, 2 );
+        tank1.attackEnemy(tank2);
+        tank2.attackEnemy(tank1);
         this.setUpEvents();
     }
 
@@ -51,8 +53,9 @@ export class GameManager{
     createEnitity(name: string, x: number, y: number, angle: number = 0, team?: number, type?: number): Entity{
         let entity: Entity;
         switch(name){
-            case 'tank': entity = new Tank(this.spriteManager, this.physicsManager, x, y, angle, team, type); break;
+            case 'tank': entity = new Tank(this.spriteManager, this.physicsManager, x, y, angle, type, team); break;
         }
+        this.physicsManager.addEntity(entity);
         return entity;
     }
 }

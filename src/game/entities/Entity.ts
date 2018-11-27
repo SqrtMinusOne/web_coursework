@@ -68,14 +68,14 @@ export abstract class Entity{
     }
 
     moveForward(){
-        let dx = Math.round(this.speed * Math.sin(this.angle * Math.PI / 180));
-        let dy = -Math.round(this.speed * Math.cos(this.angle * Math.PI / 180));
+        let dx = Math.round(this.speed * Math.cos(this.angle * Math.PI / 180));
+        let dy = Math.round(this.speed * Math.sin(this.angle * Math.PI / 180));
         this.move(dx, dy);
     }
 
     rotate(dAngle: number){
-        if (this.isRotatable){
-            this._angle += dAngle;
+        if (this.isRotatable && dAngle != 0){
+            this._angle -= dAngle;
             this.draw();
         }
     }
@@ -86,10 +86,14 @@ export abstract class Entity{
             if (this._hp < 0){
                 this.destroy();
             }
+            else{
+                this.spriteManager.drawHpBar(this.x, this.y, this.w, this.hp / this.max_hp * 100, this.index);
+            }
         }
     }
 
     destroy(){
+        this.dropAction();
         this.physicsManager.removeEntity(this);
         this.spriteManager.removeSprite(this.index);
     }
@@ -103,11 +107,24 @@ export abstract class Entity{
     getAngleTo(x: number, y: number): number{
         let dX = x - this.centerX;
         let dY = y - this.centerY;
-        let relAngle=Math.atan(dY / dX) / Math.PI * 180;
-        return this._angle + Math.round(relAngle);
+        let angle;
+        if (dX > 0)
+            angle = Math.atan(dY / dX);
+        else if (dX < 0 && dY >=0)
+            angle = Math.atan(dY / dX) + Math.PI;
+        else if (dX < 0 && dY < 0)
+            angle = Math.atan(dY / dX) - Math.PI;
+        else if (dX === 0 && dY > 0)
+            angle = Math.PI / 2;
+        else
+            angle = -Math.PI / 2;
+        angle += this.angle * Math.PI / 180;
+        angle = angle < -Math.PI ? angle + 2 * Math.PI : angle;
+        angle = angle >  Math.PI ? angle - 2 * Math.PI : angle;
+        return angle / Math.PI * 180;
     }
 
-    protected dropAction(){
+    public dropAction(){
         clearTimeout(this._action);
     }
 
@@ -122,9 +139,11 @@ export abstract class Entity{
     get isDestructible(): boolean { return this._isDestructible; }
     get isRotatable(): boolean { return this._isRotatable; }
     get isMovable(): boolean { return this._isMovable; }
+    get isDestroyed(): boolean { return this._hp <= 0 }
     get team(): number { return this._team; }
     get isLoaded(): boolean { return this._isLoaded; }
     get speed(): number { return this._speed; }
     get hp(): number { return this._hp; }
     get max_hp(): number { return this._max_hp; }
+    set action(value: any) { this._action = value; }
 }

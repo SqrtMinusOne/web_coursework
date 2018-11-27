@@ -31,7 +31,8 @@ interface DrawnSprite extends LoadedSprite{
         x: number,
         y: number
     },
-    angle: number
+    angle: number,
+    hp: number
 }
 
 interface SpriteAtlas {
@@ -109,6 +110,23 @@ export class SpriteManager{
         this.jsonLoaded = true;
     }
 
+    drawHpBar(x: number, y: number, w: number, hp: number, index: number){
+        if (hp > 0) {
+            this.ctx.beginPath();
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeStyle = "#ba0002";
+            this.ctx.moveTo(x, y+2);
+            this.ctx.lineTo(x + w, y+2);
+            this.ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.strokeStyle = "#00801a";
+            this.ctx.moveTo(x, y+2);
+            this.ctx.lineTo(x + w / 100 * hp, y+2);
+            this.ctx.stroke();
+            this.drawnSprites[index].hp = hp;
+        }
+    }
+
     drawSpite(name: string, x: number, y: number, angle: number = 0, index: number = -1,
               redraw: boolean = true, hp: number = -1): number{
         if (!this.isLoaded){
@@ -124,10 +142,12 @@ export class SpriteManager{
                 index = this.addDrawnSprite(sprite);
             }
             else{
-                if (this.drawnSprites[index] && redraw){
+                if (this.drawnSprites[index]){
                     let oldSprite = this.drawnSprites[index];
-                    this.mapManager.redrawSector(oldSprite.coords.x, oldSprite.coords.y,
-                        oldSprite.h, oldSprite.w);
+                    sprite.hp = oldSprite.hp;
+                    if (redraw)
+                        this.mapManager.redrawSector(oldSprite.coords.x-2, oldSprite.coords.y-2,
+                        oldSprite.w+4, oldSprite.h+4);
                 }
                 this.drawnSprites[index] = sprite;
             }
@@ -144,19 +164,10 @@ export class SpriteManager{
             this.ctx.drawImage(this.image, sprite.x, sprite.y, sprite.w, sprite.h,
                 0 - sprite.w / 2 - 2, 0 - sprite.h / 2 - 1, sprite.w, sprite.h);
             this.ctx.restore();
-            if (hp > 0) {
-                this.ctx.beginPath();
-                this.ctx.lineWidth = 2;
-                this.ctx.strokeStyle = "#ba0002";
-                this.ctx.moveTo(x, y);
-                this.ctx.lineTo(x + sprite.w, y);
-                this.ctx.stroke();
-                this.ctx.beginPath();
-                this.ctx.strokeStyle = "#00801a";
-                this.ctx.moveTo(x, y);
-                this.ctx.lineTo(x + sprite.w / 100 * hp, y);
-                this.ctx.stroke();
-            }
+            console.log(name, hp, sprite.hp);
+            if (hp !== -1) sprite.hp = hp;
+            else if (hp === -1 && sprite.hp) hp = sprite.hp;
+            this.drawHpBar(x, y, sprite.w, hp, index);
             this.redrawSpritesInSector(sprite.coords.x, sprite.coords.y, sprite.w, sprite.h, index);
         }
         return index;
@@ -250,7 +261,7 @@ export class SpriteManager{
     getSprite(name: string): LoadedSprite {
         for (let loadedSprite of this.sprites){
             if (loadedSprite.name === name)
-                return loadedSprite;
+                return <LoadedSprite>(<any>Object).assign({}, loadedSprite);
         }
         return null
     }
