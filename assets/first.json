@@ -38,22 +38,106 @@
          "y":0
         }, 
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1285, 0, 1285, 0, 0, 1285, 0, 1285, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1285, 0, 1285, 0, 0, 1285, 0, 1285, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         "height":40,
-         "id":6,
-         "name":"Animated",
-         "opacity":1,
-         "type":"tilelayer",
-         "visible":true,
-         "width":10,
-         "x":0,
-         "y":0
-        }, 
-        {
          "draworder":"topdown",
          "id":8,
          "name":"Objects",
-         "objects":[],
+         "objects":[
+                {
+                 "gid":1285,
+                 "height":32,
+                 "id":8,
+                 "name":"blue_radar",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":31,
+                 "y":62
+                }, 
+                {
+                 "gid":1285,
+                 "height":32,
+                 "id":9,
+                 "name":"blue_radar",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":96,
+                 "y":60
+                }, 
+                {
+                 "gid":1285,
+                 "height":32,
+                 "id":10,
+                 "name":"blue_radar",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":193,
+                 "y":61
+                }, 
+                {
+                 "gid":1285,
+                 "height":32,
+                 "id":11,
+                 "name":"blue_radar",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":256,
+                 "y":60
+                }, 
+                {
+                 "gid":1285,
+                 "height":32,
+                 "id":12,
+                 "name":"red_radar",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":31,
+                 "y":1243
+                }, 
+                {
+                 "gid":1285,
+                 "height":32,
+                 "id":13,
+                 "name":"red_radar",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":96,
+                 "y":1244
+                }, 
+                {
+                 "gid":1285,
+                 "height":32,
+                 "id":14,
+                 "name":"red_radar",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":256,
+                 "y":1245
+                }, 
+                {
+                 "gid":1285,
+                 "height":32,
+                 "id":15,
+                 "name":"red_radar",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":193,
+                 "y":1243
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
@@ -61,7 +145,7 @@
          "y":0
         }],
  "nextlayerid":9,
- "nextobjectid":8,
+ "nextobjectid":16,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.2.1",
@@ -2075,40 +2159,13 @@
          "tileheight":32,
          "tiles":[
                 {
-                 "animation":[
-                        {
-                         "duration":75,
-                         "tileid":0
-                        }, 
-                        {
-                         "duration":75,
-                         "tileid":1
-                        }, 
-                        {
-                         "duration":75,
-                         "tileid":2
-                        }, 
-                        {
-                         "duration":75,
-                         "tileid":3
-                        }, 
-                        {
-                         "duration":75,
-                         "tileid":4
-                        }, 
-                        {
-                         "duration":75,
-                         "tileid":5
-                        }, 
-                        {
-                         "duration":75,
-                         "tileid":6
-                        }, 
-                        {
-                         "duration":75,
-                         "tileid":7
-                        }],
                  "id":0,
+                 "properties":[
+                        {
+                         "name":"entityname",
+                         "type":"string",
+                         "value":"radar"
+                        }],
                  "type":"imp"
                 }, 
                 {

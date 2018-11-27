@@ -40,8 +40,9 @@ export abstract class Entity{
 
     draw(){
         let cur_hp = this.max_hp > 0 ? this.hp / this.max_hp * 100 : -1;
+        let hp_bar_color =
         this._index = this.spriteManager.drawSpite(this.spriteName, this.x, this.y, this.angle,
-            this._index, true, cur_hp);
+            this._index, true, cur_hp, this.hpBarColor);
         if (this.w === 0 || this.h === 0){
             this.getGeometry();
         }
@@ -96,7 +97,8 @@ export abstract class Entity{
                 this.destroy();
             }
             else{
-                this.spriteManager.drawHpBar(this.x, this.y, this.w, this.hp / this.max_hp * 100, this.index, true);
+                this.spriteManager.drawHpBar(this.x, this.y, this.w, this.hp / this.max_hp * 100,
+                    this.index, true, this.hpBarColor);
             }
         }
     }
@@ -155,7 +157,11 @@ export abstract class Entity{
             this._AICallback();
 
     }
-
+    get hpBarColor(){
+        if (this.team == 0)
+            return "#00801a";
+        return this.team === 2 ? "#0000ff" : "#ff1100";
+    }
     get index(): number { return this._index; }
     get y(): number { return this._y; }
     get x(): number { return this._x; }

@@ -33,7 +33,8 @@ interface DrawnSprite extends LoadedSprite{
         y: number
     },
     angle: number,
-    hp: number
+    hp: number,
+    hpBarColor: string
 }
 
 interface SpriteAtlas {
@@ -111,34 +112,38 @@ export class SpriteManager{
         this.jsonLoaded = true;
     }
 
-    drawHpBar(x: number, y: number, w: number, hp: number, index: number, relative: boolean = false){
+    drawHpBar(x: number, y: number, w: number, hp: number, index: number, relative: boolean = false, color = "#00801a"){
         if (relative) {
             x -= this.mapManager.view.x;
             y -= this.mapManager.view.y;
         }
         if (hp > 0) {
+            let barStartX = x;
+            let barStartY = y + 2;
+            let barEndX = x + w;
+            let barEndY = y + 2;
             this.ctx.beginPath();
             this.ctx.lineWidth = 2;
-            this.ctx.strokeStyle = "#ba0002";
-            this.ctx.moveTo(x, y+2);
-            this.ctx.lineTo(x + w, y+2);
+            this.ctx.strokeStyle = "#340007";
+            this.ctx.moveTo(barStartX, barStartY);
+            this.ctx.lineTo(barEndX, barEndY);
             this.ctx.stroke();
             this.ctx.beginPath();
-            this.ctx.strokeStyle = "#00801a";
-            this.ctx.moveTo(x, y+2);
-            this.ctx.lineTo(x + w / 100 * hp, y+2);
+            this.ctx.strokeStyle = color;
+            this.ctx.moveTo(barStartX, barStartY);
+            this.ctx.lineTo(barStartX + (barEndX - barStartX) / 100 * hp, barEndY);
             this.ctx.stroke();
             this.drawnSprites[index].hp = hp;
         }
     }
 
     drawSpite(name: string, x: number, y: number, angle: number = 0, index: number = -1,
-              redraw: boolean = true, hp: number = -1): number{
+              redraw: boolean = true, hp: number = -1, hpBarColor = "#00801a"): number{
         if (!this.isLoaded){
             if (index === -1){
                 index = this.addDrawnSprite(null);
             }
-            setTimeout(()=>{this.drawSpite(name, x, y, angle, index, redraw, hp)}, 100);
+            setTimeout(()=>{this.drawSpite(name, x, y, angle, index, redraw, hp, hpBarColor)}, 100);
         }
         else{
             let sprite = <DrawnSprite>this.getSprite(name);
@@ -149,6 +154,7 @@ export class SpriteManager{
                 if (this.drawnSprites[index]){
                     let oldSprite = this.drawnSprites[index];
                     sprite.hp = oldSprite.hp;
+                    sprite.hpBarColor = oldSprite.hpBarColor;
                     if (redraw) {
                         let sector = SpriteManager.getSector(oldSprite);
                         this.mapManager.redrawSector(sector.x, sector.y, sector.w, sector.h);
@@ -169,9 +175,12 @@ export class SpriteManager{
             this.ctx.drawImage(this.image, sprite.x, sprite.y, sprite.w, sprite.h,
                 0 - sprite.w / 2 - 2, 0 - sprite.h / 2 - 1, sprite.w, sprite.h);
             this.ctx.restore();
-            if (hp !== -1) sprite.hp = hp;
+            if (hp !== -1) {
+                sprite.hp = hp;
+                sprite.hpBarColor = hpBarColor;
+            }
             else if (hp === -1 && sprite.hp) hp = sprite.hp;
-            this.drawHpBar(x, y, sprite.w, hp, index);
+            this.drawHpBar(x, y, sprite.w, hp, index, false, hpBarColor);
             if (redraw) {
                 let sector = SpriteManager.getSector(sprite);
                 this.redrawSpritesInSector(sector.x, sector.y, sector.w, sector.h, index);

@@ -4,6 +4,11 @@ interface TileInfo {
     animation: {
         duration: number,
         tileid: number
+    }[],
+    properties: {
+        name: string,
+        type: string,
+        value: string | number | boolean
     }[]
 }
 
@@ -156,7 +161,14 @@ export class MapManager {
         for (let tileset of this.mapData.tilesets) {
             this.loadTileSet(tileset);
         }
-        this.jsonLoaded = true;
+        if (this.tLayer.length === 0){
+            for (let layer of this.mapData.layers){
+                if (layer.type === 'tilelayer'){
+                    this.tLayer.push(<TileLayer>layer);
+                }
+            }
+        }
+        this.jsonLoaded = true
     }
 
     private loadTileSet(tileset: TileSet) {
@@ -202,13 +214,6 @@ export class MapManager {
         else{
             this.clearAnimations();
             this.ctx.clearRect(0, 0, this.view.h, this.view.w);
-            if (this.tLayer.length === 0){
-                for (let layer of this.mapData.layers){
-                    if (layer.type === 'tilelayer'){
-                        this.tLayer.push(<TileLayer>layer);
-                    }
-                }
-            }
             for (let layer of this.tLayer) {
                 for (let i = 0; i < layer.data.length; i++) {
                     this.drawTile(layer, i);
@@ -263,21 +268,6 @@ export class MapManager {
         tile.tilesetFirstGid = tileset.firstgid;
         tile.info = tileset.tiles[id];
         return tile
-    }
-
-    parseEntities(){
-        if (!this.isLoaded){
-            setTimeout(()=>{this.parseEntities()}, 100);
-        }
-        {
-            for (let layer of this.mapData.layers){
-                if (layer.type === 'objectgroup'){
-                    for (let entity in <ObjectLayer>layer){
-                        //TODO create GameManager Object
-                    }
-                }
-            }
-        }
     }
 
     private animateTile(layer: TileLayer, tileIndex: number, tile: LoadedTileInfo, pX: number, pY: number,
@@ -383,13 +373,12 @@ export class MapManager {
         return null
     }
 
-    getTilesetIds(x: number, y: number){
-        let res:number[] = [];
-        for (let layer of this.tLayer) {
-            let id = this.getTileIndex(x, y);
-            res.push(layer.data[id]);
+    getObjectLayer(): ObjectLayer{
+        for (let layer of this.mapData.layers){
+            if (layer.type === 'objectgroup'){
+                return <ObjectLayer>layer;
+            }
         }
-        return res;
     }
 
     private getTileIndex(x: number, y: number) {
@@ -397,6 +386,28 @@ export class MapManager {
             return (Math.floor(y / this.tSize.y)) * this.xCount + Math.floor(x / this.tSize.x);
         else
             return -1;
+    }
+
+    getPassableMap(): number[][]{
+        let arr: number[][] = [];
+        for (let x = 0; x < this.mapData.width; x++){
+            arr[x] = [];
+            for (let y = 0; y < this.mapData.height; y++){
+                arr[x][y] = -1;
+            }
+        }
+        for (let layer of this.tLayer) {
+            for (let i = 0; i < layer.data.length; i++){
+                let tile = this.getTile(layer.data[i]);
+                if (tile && tile.info && tile.info.type === 'imp'){
+                    let x = i % this.xCount;
+                    let y = Math.floor(i / this.xCount);
+                    arr[x][y] = -2;
+                }
+            }
+        }
+        console.log(arr);
+        return arr;
     }
 
     centerAtCoords(x:number, y: number){

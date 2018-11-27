@@ -44,6 +44,12 @@
                  "tileid":7
                 }],
          "id":0,
+         "properties":[
+                {
+                 "name":"entityname",
+                 "type":"string",
+                 "value":"radar"
+                }],
          "type":"imp"
         }, 
         {

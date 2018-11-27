@@ -30,10 +30,16 @@ export class TankAI implements AIManager{
     }
 
     findEnemy(): EntityWithAttack{
+        let distance = Number.MAX_VALUE;
+        let closestEnemy = null;
         for (let enemy of this.tank.getAllEnemies()) {
-            return <EntityWithAttack>enemy;
+            let current_distance = this.tank.getDistanceTo(enemy.centerX, enemy.centerY);
+            if (current_distance < distance){
+                distance = current_distance;
+                closestEnemy = enemy;
+            }
         }
-        return null;
+        return closestEnemy;
     }
 
     checkAfk(){

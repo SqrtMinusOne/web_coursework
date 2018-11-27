@@ -4,11 +4,23 @@ import {EntityWithAttack} from "./entities/EntityWithAttack";
 
 export class PhysicsManager {
     private _mapManager: MapManager;
+    private passableMap: number[][];
     private _entities: Entity[];
 
     constructor(mapManager: MapManager){
         this._mapManager = mapManager;
         this._entities = [];
+        this.getMapData();
+    }
+
+    private getMapData(){
+        if (!this._mapManager.isLoaded){
+            setTimeout(this.getMapData.bind(this), 100);
+        }
+        else{
+            this.passableMap = this._mapManager.getPassableMap();
+            this.algLee(0, 0, 9, 39);
+        }
     }
 
     addEntity(entity: Entity): Entity{
@@ -18,6 +30,39 @@ export class PhysicsManager {
 
     removeEntity(entity: Entity){
         delete this._entities[entity.index];
+    }
+
+    algLee(x1, y1, x2, y2){
+        function mark(map, x, y, m){
+            if (x >= 0 && y >= 0 && x < map.length && y < map[0].length){
+                if (map[x][y] === -1)
+                    map[x][y] = m;
+            }
+        }
+        let map = JSON.parse(JSON.stringify(this.passableMap));
+        let d: number = 0;
+        map[x1][y1] = d;
+        let pathFound: boolean = false;
+        let allChecked: boolean = false;
+        while (!pathFound || allChecked) {
+            allChecked = true;
+            for (let x = 0; x < map.length; x++) {
+                for (let y = 0; y < map[0].length; y++) {
+                    allChecked = allChecked && map[x][y] === -1;
+                    if (map[x][y] === d){
+                        mark(map, x-1, y, d+1);
+                        mark(map,x+1, y, d+1);
+                        mark(map, x, y-1, d+1);
+                        mark(map, x,y+1, d+1);
+                    }
+                }
+            }
+            pathFound = (map[x2][y2]) > 0;
+            d++;
+            console.log(JSON.parse(JSON.stringify(map)));
+            if (d > 70)
+                break;
+        }
     }
 
     isPassable(x: number, y: number, entity: Entity): boolean{
