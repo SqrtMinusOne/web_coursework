@@ -19,7 +19,7 @@ export abstract class EntityWithAttack extends Entity{
         let {gX, gY} = this.getGunRelativeCoords();
         new Beam(this.spriteManager, this.x + gX, this.y + gY, x,
             y, this.team, callback);
-        this.delayedCallAI();
+        this.delayedCallAI(this._fireRate);
     }
 
     getGunRelativeCoords(): {gX: number, gY: number} {

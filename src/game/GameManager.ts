@@ -5,14 +5,21 @@ import {PhysicsManager} from "./PhysicsManager";
 import {Tank} from "./entities/Tank";
 import {TankAI} from './AI/TankAI'
 import {Entity} from "./entities/Entity";
+import {Turret} from "./entities/Turret";
+import {TurretAI} from "./AI/TurretAI";
 
 export class GameManager{
     private mapManager: MapManager;
     private spriteManager: SpriteManager;
     private eventsManager: EventsManager;
     private physicsManager: PhysicsManager;
+    private canvas: HTMLCanvasElement;
+    public chosen_team;
+    public chosen_name;
+    public chosen_type;
 
     constructor(canvas: HTMLCanvasElement){
+        this.canvas = canvas;
         this.mapManager = new MapManager(canvas, '/assets/first.json');
         this.spriteManager = new SpriteManager(canvas, '/assets/sprites.json', this.mapManager);
         this.eventsManager = new EventsManager(canvas);
@@ -27,25 +34,30 @@ export class GameManager{
             this.mapManager.scrollByY(-event.wheelDelta/120*32*2);
         });
         this.eventsManager.addHandler(MOUSE_DOWN, (event: MouseEvent)=>{
-            let team;
-            if (event.button === 0)
-                team = 1;
-            else
-                team = 2;
-            this.createEnitity('tank', event.clientX + this.mapManager.view.x,
-                event.clientY + this.mapManager.view.y, 0, team, 2);
+            let x = event.clientX - (<DOMRect>this.canvas.getBoundingClientRect()).x;
+            let y = event.clientY - (<DOMRect>this.canvas.getBoundingClientRect()).y;
+            if (!this.chosen_team || !this.chosen_type || !this.chosen_name)
+                return;
+            this.createEnitity(this.chosen_name, x, y, 0, this.chosen_type, this.chosen_team);
+            console.log(x, y);
         })
     }
 
-    createEnitity(name: string, x: number, y: number, angle: number = 0, team?: number, type?: number): Entity{
+    private createEnitity(name: string, x: number, y: number, angle: number = 0,
+                          type?: number, team: number = this.chosen_team): Entity{
         let entity: Entity;
         switch(name){
             case 'tank':
                 entity = new Tank(this.spriteManager, this.physicsManager, x, y, angle, type, team);
                 new TankAI(entity);
-            break;
+                break;
+            case 'turret':
+                entity = new Turret(this.spriteManager, this.physicsManager, x, y, angle, team);
+                new TurretAI(entity);
+                break;
         }
         this.physicsManager.addEntity(entity);
         return entity;
     }
+
 }

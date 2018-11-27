@@ -25,7 +25,7 @@ export class Tank extends EntityWithAttack{
         this._range = this.ranges[type - 1];
         this._attack = this.attacks[type - 1];
         this._max_rotate_angle = 15;
-        this._fireRate = Entity.updateSpeed * 5;
+        this._fireRate = Entity.updateSpeed * 3;
         this._hp = this._max_hp;
         this._gun_x = 3;
         this._gun_y = 16;

@@ -25,7 +25,7 @@ export abstract class Entity{
     protected _team: number = -1;
     protected physicsManager: PhysicsManager;
     // AI stuff
-    protected _AICallback: ()=>boolean;
+    protected _AICallback: ()=>void;
     protected _action: any;
     private AICalled: boolean = false;
     static updateSpeed: number = 75;
@@ -137,15 +137,15 @@ export abstract class Entity{
         clearTimeout(this._action);
     }
 
-    public initAI(callback: ()=>boolean){
+    public initAI(callback: ()=>void){
         this._AICallback = callback;
         this.delayedCallAI();
     }
 
-    public delayedCallAI(){
+    public delayedCallAI(delay: number = Entity.updateSpeed){
         if (!this.AICalled) {
             this.AICalled = true;
-            this._action = setTimeout(this.callAI.bind(this), Entity.updateSpeed);
+            this._action = setTimeout(this.callAI.bind(this), delay);
         }
     }
 

@@ -1,8 +1,9 @@
 import {Tank} from "../entities/Tank";
 import {Entity} from "../entities/Entity";
 import {EntityWithAttack} from "../entities/EntityWithAttack";
+import {AIManager} from "./AI";
 
-export class TankAI{
+export class TankAI implements AIManager{
     private tank: Tank;
     private enemy: EntityWithAttack;
 
@@ -42,20 +43,16 @@ export class TankAI{
     }
 
     attackEnemy(enemy: Entity){
-        console.log('Attacking ' + enemy.spriteName);
         let angle = this.tank.getAngleTo(enemy.centerX, enemy.centerY);
         let distance = this.tank.getDistanceTo(enemy.centerX, enemy.centerY);
         if (Math.abs(angle) > 5) {
             this.tank.rotate(angle);
-            return true;
         }
         else if (distance > this.tank.range){
             this.tank.moveForward();
-            return true;
         }
         else{
             this.tank.fireAtEnemy(enemy);
         }
-        return true;
     }
 }
