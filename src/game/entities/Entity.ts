@@ -60,22 +60,29 @@ export abstract class Entity{
         }
     }
 
-    move(dx: number, dy: number){
+    move(dx: number, dy: number): boolean{
         if (!this.spriteManager.isLoaded) {
             setTimeout(()=>{this.move(dx, dy)}, 100);
+            return true;
         }
         if (this.physicsManager.isPassable(this.x + dx, this.y + dy, this)){
             this._x += dx;
             this._y += dy;
+            this._x = Math.floor(this._x);
+            this._y = Math.floor(this._y);
             this.draw();
+            return true;
         }
+        return false;
     }
 
-    moveForward(){ // AI Interface
-        let dx = Math.round(this.speed * Math.cos(this.angle * Math.PI / 180));
-        let dy = Math.round(this.speed * Math.sin(this.angle * Math.PI / 180));
-        this.move(dx, dy);
+    moveForward(distance: number = this.speed): boolean{ // AI Interface
+        distance = distance > this.speed ? this.speed : distance;
+        let dx = Math.round(distance * Math.cos(this.angle * Math.PI / 180));
+        let dy = Math.round(distance * Math.sin(this.angle * Math.PI / 180));
+        let moved = this.move(dx, dy);
         this.delayedCallAI();
+        return moved;
     }
 
     rotate(dAngle: number){ // AI Interface

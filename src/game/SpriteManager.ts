@@ -54,10 +54,10 @@ interface SpriteAtlas {
 }
 
 export class SpriteManager{
-    private image: HTMLImageElement;
+        private image: HTMLImageElement;
     private sprites: LoadedSprite[];
     private drawnBeams: {x1: number, y1: number, x2: number, y2: number, color: string}[];
-    private drawnSprites: DrawnSprite[];
+    private _drawnSprites: DrawnSprite[];
     private atlas: SpriteAtlas;
     private mapManager: MapManager;
     private ctx: CanvasRenderingContext2D;
@@ -66,7 +66,7 @@ export class SpriteManager{
 
     constructor(canvas: HTMLCanvasElement, path: string, mapManager: MapManager){
         this.sprites = [];
-        this.drawnSprites = [];
+        this._drawnSprites = [];
         this.drawnBeams = [];
         this.imgLoaded = false;
         this.jsonLoaded = false;
@@ -120,7 +120,7 @@ export class SpriteManager{
         if (hp > 0) {
             let barStartX = x;
             let barStartY = y + 2;
-            let barEndX = x + w;
+            let barEndX = x + w - 1;
             let barEndY = y + 2;
             this.ctx.beginPath();
             this.ctx.lineWidth = 2;
@@ -133,7 +133,7 @@ export class SpriteManager{
             this.ctx.moveTo(barStartX, barStartY);
             this.ctx.lineTo(barStartX + (barEndX - barStartX) / 100 * hp, barEndY);
             this.ctx.stroke();
-            this.drawnSprites[index].hp = hp;
+            this._drawnSprites[index].hp = hp;
         }
     }
 
@@ -151,16 +151,16 @@ export class SpriteManager{
                 index = this.addDrawnSprite(sprite);
             }
             else{
-                if (this.drawnSprites[index]){
-                    let oldSprite = this.drawnSprites[index];
+                if (this._drawnSprites[index]){
+                    let oldSprite = this._drawnSprites[index];
                     sprite.hp = oldSprite.hp;
                     sprite.hpBarColor = oldSprite.hpBarColor;
                     if (redraw) {
-                        let sector = SpriteManager.getSector(oldSprite);
+                        let sector = SpriteManager.getSpriteSector(oldSprite);
                         this.mapManager.redrawSector(sector.x, sector.y, sector.w, sector.h);
                     }
                 }
-                this.drawnSprites[index] = sprite;
+                this._drawnSprites[index] = sprite;
             }
             sprite.coords = {x: x, y: y};
             sprite.angle = angle;
@@ -182,7 +182,7 @@ export class SpriteManager{
             else if (hp === -1 && sprite.hp) hp = sprite.hp;
             this.drawHpBar(x, y, sprite.w, hp, index, false, hpBarColor);
             if (redraw) {
-                let sector = SpriteManager.getSector(sprite);
+                let sector = SpriteManager.getSpriteSector(sprite);
                 this.redrawSpritesInSector(sector.x, sector.y, sector.w, sector.h, index);
             }
         }
@@ -232,18 +232,18 @@ export class SpriteManager{
 
     private addDrawnSprite(sprite: DrawnSprite | null){
         let index: number;
-        for (index = 0; index < this.drawnSprites.length; index++){
-            if (this.drawnSprites[index] === undefined){
+        for (index = 0; index < this._drawnSprites.length; index++){
+            if (this._drawnSprites[index] === undefined){
                 break;
             }
         }
-        this.drawnSprites[index] = sprite;
+        this._drawnSprites[index] = sprite;
         return index;
     }
 
     private redrawAllSprites(){
-        for (let i = 0; i < this.drawnSprites.length; i++){
-            let drawnSprite = this.drawnSprites[i];
+        for (let i = 0; i < this._drawnSprites.length; i++){
+            let drawnSprite = this._drawnSprites[i];
             if (drawnSprite){
                 this.drawSpite(drawnSprite.name, drawnSprite.coords.x, drawnSprite.coords.y, drawnSprite.angle, i, false);
             }
@@ -257,18 +257,24 @@ export class SpriteManager{
         return {x: rX, y: rY}
     }
 
-    private static getSector(sprite: DrawnSprite): {x: number, y: number, w: number, h: number}{
-        let cX = sprite.coords.x + sprite.w / 2;
-        let cY = sprite.coords.y + sprite.h / 2;
-        let p1 = SpriteManager.rotatePoint(sprite.coords.x, sprite.coords.y, cX, cY, sprite.angle);
-        let p2 = SpriteManager.rotatePoint(sprite.coords.x, sprite.coords.y + sprite.h, cX, cY, sprite.angle);
-        let p3 = SpriteManager.rotatePoint(sprite.coords.x + sprite.w, sprite.coords.y, cX, cY, sprite.angle);
-        let p4 = SpriteManager.rotatePoint(sprite.coords.x + sprite.w, sprite.coords.y + sprite.h, cX, cY, sprite.angle);
+    static getSpriteSector(sprite: DrawnSprite)
+            :{x: number, y: number, w: number, h: number}{
+        return this.getSector(sprite.coords.x, sprite.coords.y, sprite.w, sprite.h, sprite.angle);
+    }
+
+    static getSector(x: number, y: number, w: number, h: number, angle: number)
+            :{x: number, y: number, w: number, h: number}{
+        let cX = x + w / 2;
+        let cY = y + h / 2;
+        let p1 = SpriteManager.rotatePoint(x, y, cX, cY, angle);
+        let p2 = SpriteManager.rotatePoint(x, y + h, cX, cY, angle);
+        let p3 = SpriteManager.rotatePoint(x + w, y, cX, cY, angle);
+        let p4 = SpriteManager.rotatePoint(x + w, y + h, cX, cY, angle);
         let x1 = Math.min(p1.x, p2.x, p3.x, p4.x);
         let y1 = Math.min(p1.y, p2.y, p3.y, p4.y);
         let x2 = Math.max(p1.x, p2.x, p3.x, p4.x);
         let y2 = Math.max(p1.y, p2.y, p3.y, p4.y);
-        return{
+        return {
             x: Math.floor(x1), y: Math.floor(y1), w: Math.ceil(x2 - x1), h: Math.ceil(y2 - y1)
         }
     }
@@ -280,12 +286,12 @@ export class SpriteManager{
 
     private redrawSpritesInSector(x: number, y: number, w: number, h: number,
                                   exclude: number = Number.MAX_VALUE){
-        if (!this.drawnSprites)
+        if (!this._drawnSprites)
             return;
-        for (let i = 0; i < this.drawnSprites.length; i++){
-            let drawnSprite = this.drawnSprites[i];
+        for (let i = 0; i < this._drawnSprites.length; i++){
+            let drawnSprite = this._drawnSprites[i];
             if (drawnSprite && i!=exclude){
-                let sector = SpriteManager.getSector(drawnSprite);
+                let sector = SpriteManager.getSpriteSector(drawnSprite);
                 if (SpriteManager.intersection(x, x + w, sector.x, sector.x + sector.w) &&
                     SpriteManager.intersection(y, y + h, sector.y, sector.y + sector.h)) {
                     this.drawSpite(drawnSprite.name, drawnSprite.coords.x, drawnSprite.coords.y, drawnSprite.angle, i, false);
@@ -295,10 +301,10 @@ export class SpriteManager{
     }
 
     removeSprite(index: number){
-        let sprite = this.drawnSprites[index];
+        let sprite = this._drawnSprites[index];
         this.mapManager.redrawSector(sprite.coords.x, sprite.coords.y-5, sprite.w+5, sprite.h+5);
         this.redrawSpritesInSector(sprite.coords.x, sprite.coords.y, sprite.w, sprite.h, index);
-        delete this.drawnSprites[index];
+        delete this._drawnSprites[index];
     }
 
     getSprite(name: string): LoadedSprite {
@@ -312,5 +318,7 @@ export class SpriteManager{
     getSpriteByIndex(index: number): LoadedSprite{
         return this.sprites[index];
     }
+
+    get drawnSprites(): DrawnSprite[] { return this._drawnSprites; }
 
 }

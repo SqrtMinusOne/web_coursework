@@ -24,7 +24,7 @@ export class GameManager{
         this.mapManager = new MapManager(canvas, '/assets/first.json');
         this.spriteManager = new SpriteManager(canvas, '/assets/sprites.json', this.mapManager);
         this.eventsManager = new EventsManager(canvas);
-        this.physicsManager = new PhysicsManager(this.mapManager);
+        this.physicsManager = new PhysicsManager(this.mapManager, this.spriteManager);
         this.mapManager.draw();
       //  this.mapManager.startUpdate();
         this.setUpEvents();
@@ -68,7 +68,7 @@ export class GameManager{
         switch(name){
             case 'tank':
                 entity = new Tank(this.spriteManager, this.physicsManager, x, y, angle, type, team);
-                new TankAI(entity);
+                new TankAI(entity, this.physicsManager);
                 break;
             case 'turret':
                 entity = new Turret(this.spriteManager, this.physicsManager, x, y, angle, team);

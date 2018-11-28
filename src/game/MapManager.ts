@@ -100,7 +100,7 @@ export class MapManager {
     private tLayer: TileLayer[];
     private xCount: number;
     private yCount: number;
-    private tSize: { x: number, y: number };
+    tSize: { x: number, y: number };
     public mapSize: { x: number, y: number };
     private tilesets: LoadedTileSet[];
     private imgLoadCount: number;
@@ -238,7 +238,9 @@ export class MapManager {
             pY -= this.view.y;
             this.ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x, this.tSize.y,
                 pX, pY, this.tSize.x, this.tSize.y);
-            /*this.ctx.rect(pX, pY, this.tSize.x, this.tSize.y);
+/*            this.ctx.strokeStyle = "#000000";
+            this.ctx.lineWidth = 1;
+            this.ctx.rect(pX, pY, this.tSize.x, this.tSize.y);
             this.ctx.stroke();*/
             if (tile.info) {
                 if (tile.info.animation && !noAnimate){
@@ -406,7 +408,6 @@ export class MapManager {
                 }
             }
         }
-        console.log(arr);
         return arr;
     }
 
