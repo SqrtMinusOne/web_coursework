@@ -98,8 +98,8 @@ interface LoadedTileInfo {
 export class MapManager {
     private mapData: MapJSON;
     private tLayer: TileLayer[];
-    private xCount: number;
-    private yCount: number;
+    xCount: number;
+    yCount: number;
     tSize: { x: number, y: number };
     public mapSize: { x: number, y: number };
     private tilesets: LoadedTileSet[];

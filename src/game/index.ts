@@ -2,9 +2,9 @@ import {GameManager} from "./GameManager";
 
 require('../styles/style.less');
 require('../../bower_components/w3css-v3/w3.css');
-// @ts-ignore
-let canvas: HTMLCanvasElement = document.getElementById('main_canvas');
-let gameManager = new GameManager(canvas);
+let canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('main_canvas');
+let miniMapCanvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('minimap_canvas');
+let gameManager = new GameManager(canvas, miniMapCanvas);
 
 document.getElementById('fed_chosen').onclick = function () {
     document.getElementById('side').innerText = "Side chosen";

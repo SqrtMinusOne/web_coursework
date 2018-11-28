@@ -66,6 +66,10 @@ export class PhysicsManager {
         delete this._entities[entity.index];
     }
 
+    copyPassableMap(){
+        return JSON.parse(JSON.stringify(this.passableMap));
+    }
+
     algLee(x1, y1, x2, y2): {dx: number, dy: number}[] | null{
         function mark(map, x, y, m): boolean{
             if (check(map, x, y)){
@@ -91,7 +95,7 @@ export class PhysicsManager {
             return res;
         }
         //let map = this.getMapData();
-        let map = JSON.parse(JSON.stringify(this.passableMap));
+        let map = this.copyPassableMap();
         if (!map)
             return null;
         let d: number = 0;
