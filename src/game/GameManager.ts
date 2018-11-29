@@ -11,6 +11,11 @@ import {Radar} from "./entities/Radar";
 import {EntityWithAttack} from "./entities/EntityWithAttack";
 import {SoundManager} from "./SoundManager";
 
+interface Score {
+    player: string,
+    score: number
+}
+
 export class GameManager {
     private mapManager: MapManager;
     private spriteManager: SpriteManager;
@@ -184,6 +189,21 @@ export class GameManager {
             this._table_fields[0][team].innerText = this.teamScores[team].toString();
             this._table_fields[1][team].innerText = this.teamEnergies[team].toString();
             this._table_fields[2][team].innerText = this.maxTeamEnergies[team].toString();
+        }
+        this.checkGameOver();
+    }
+
+    private checkGameOver(){
+        for (let team = 1; team <= 2; team++){
+            if (this.maxTeamEnergies[team] == 0){
+                let scoreStr = localStorage.getItem('FedVsRebScore');
+                let scores = [];
+                if (scoreStr){
+                    scores = JSON.parse(scoreStr);
+                }
+
+                localStorage.setItem('FedVsRebScore', JSON.stringify(scores));
+            }
         }
     }
 
