@@ -16,13 +16,19 @@ body
                         div.w3-row
                             button#fed_chosen.w3-button.w3-blue.w3-half Federation
                             button#reb_chosen.w3-button.w3-red.w3-half Rebels
+                    div#level-select-wrapper.w3-pale-blue.w3-leftbar.w3-rightbar.w3-border-indigo.w3-border
+                        h4(style='margin: 2px !important') Choose the level
+                        select#level-select.w3-select
+                            option(value = "" disabled selected) Select the level
+                            option(value = "/assets/first.json") First
+                            option(value = "/assets/second.json") Second
                     div#game_process(hidden='hidden')
                         table.w3-table.w3-white.w3-border.w3-border-black
                             tr
                                 th Side
                                 th Score
                             tr.w3-red
-                                td Rebels
+                                td RebelsA
                                 td#reb_score 0
                             tr.w3-blue
                                 td Federation

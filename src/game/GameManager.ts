@@ -36,9 +36,9 @@ export class GameManager {
     private game_interval: any = null;
     private isGameOver: boolean = false;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, level: string) {
         this.canvas = canvas;
-        this.mapManager = new MapManager(canvas, '/assets/first.json');
+        this.mapManager = new MapManager(canvas, level);
         this.spriteManager = new SpriteManager(canvas, '/assets/sprites.json', this.mapManager);
         this.eventsManager = new EventsManager(canvas);
         this.soundManager = new SoundManager();
