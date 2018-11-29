@@ -3,6 +3,7 @@ import {SpriteManager} from "../SpriteManager";
 import {PhysicsManager} from "../PhysicsManager";
 import {Explosion} from "./Explosion";
 import {EntityWithAttack} from "./EntityWithAttack";
+import {SoundManager} from "../SoundManager";
 
 export class Tank extends EntityWithAttack{
     private sprite_name: string;
@@ -12,9 +13,9 @@ export class Tank extends EntityWithAttack{
     private attacks = [3, 4, 2, 6];
     private fired: boolean = false;
 
-    constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, x: number, y: number, angle: number,
-                type: number, team: number) {
-        super(spriteManager, physicsManager, x, y, angle);
+    constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, soundManager: SoundManager,
+                x: number, y: number, angle: number, type: number, team: number) {
+        super(spriteManager, physicsManager, soundManager, x, y, angle);
         this._isDestructible = true;
         this._isMovable = true;
         this._isRotatable = true;
@@ -46,6 +47,6 @@ export class Tank extends EntityWithAttack{
 
     destroy() {
         super.destroy();
-        this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, this.x, this.y));
+        this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, this.soundManager, this.x, this.y));
     }
 }

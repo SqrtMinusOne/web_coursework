@@ -2,12 +2,14 @@ import {Entity} from "./Entity";
 import {SpriteManager} from "../SpriteManager";
 import {PhysicsManager} from "../PhysicsManager";
 import {Explosion} from "./Explosion";
+import {SoundManager} from "../SoundManager";
 
 export class Radar extends Entity{
     private id: number = 1;
 
-    constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, x: number, y: number, team: number) {
-        super(spriteManager, physicsManager, x, y, 0);
+    constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, soundManager: SoundManager,
+                x: number, y: number, team: number) {
+        super(spriteManager, physicsManager, soundManager, x, y, 0);
         this._isDestructible = true;
         this._max_hp = 150;
         this._cost = 100;
@@ -28,7 +30,7 @@ export class Radar extends Entity{
 
     destroy(): void {
         super.destroy();
-        this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, this.x, this.y));
+        this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, this.soundManager, this.x, this.y));
     }
 
     get spriteName(): string {

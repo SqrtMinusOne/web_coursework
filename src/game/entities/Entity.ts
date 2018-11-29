@@ -1,5 +1,6 @@
 import {SpriteManager} from "../SpriteManager";
 import {PhysicsManager} from "../PhysicsManager";
+import {SoundManager} from "../SoundManager";
 
 export abstract class Entity{
     // Geometry
@@ -25,18 +26,21 @@ export abstract class Entity{
     protected _team: number = -1;
     protected _cost: number = -1;
     protected physicsManager: PhysicsManager;
+    protected soundManager: SoundManager;
     // AI stuff
     protected _AICallback: ()=>void;
     protected _action: any;
     private AICalled: boolean = false;
     static updateSpeed: number = 75;
 
-    protected constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, x: number, y: number, angle: number){
+    protected constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, soundManager: SoundManager,
+                          x: number, y: number, angle: number){
         this._x = x;
         this._y = y;
         this._angle = angle;
         this.spriteManager = spriteManager;
         this.physicsManager = physicsManager;
+        this.soundManager = soundManager;
     }
 
     draw(){

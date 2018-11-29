@@ -1,8 +1,11 @@
 import {GameManager} from "./GameManager";
+import {SoundManager} from './SoundManager'
 
 require('../styles/style.less');
 require('../../bower_components/w3css-v3/w3.css');
 let canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('main_canvas');
+let s: SoundManager = new SoundManager();
+
 let gameManager = new GameManager(canvas);
 gameManager.table_fields = [
     [null, document.getElementById('reb_score'), document.getElementById('fed_score')],

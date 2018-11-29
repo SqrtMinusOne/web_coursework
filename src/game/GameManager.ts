@@ -9,12 +9,14 @@ import {Turret} from "./entities/Turret";
 import {TurretAI} from "./AI/TurretAI";
 import {Radar} from "./entities/Radar";
 import {EntityWithAttack} from "./entities/EntityWithAttack";
+import {SoundManager} from "./SoundManager";
 
 export class GameManager {
     private mapManager: MapManager;
     private spriteManager: SpriteManager;
     private eventsManager: EventsManager;
     private physicsManager: PhysicsManager;
+    private soundManager: SoundManager;
     private canvas: HTMLCanvasElement;
     private teamEnergies: number[] = [0, 0, 0];
     private maxTeamEnergies: number[] = [0, 0, 0];
@@ -24,13 +26,15 @@ export class GameManager {
     public chosen_name;
     public chosen_type;
     private game_interval: any = null;
-    private
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.mapManager = new MapManager(canvas, '/assets/first.json');
         this.spriteManager = new SpriteManager(canvas, '/assets/sprites.json', this.mapManager);
         this.eventsManager = new EventsManager(canvas);
+        this.soundManager = new SoundManager();
+        this.soundManager.loadArray(['/assets/ost.mp3', '/assets/boom.mp3', '/assets/fire.mp3']);
+        this.soundManager.play('/assets/ost.mp3');
         this.physicsManager = new PhysicsManager(this.mapManager, this.spriteManager);
         this.physicsManager.destroyCallback = this.destroyEntityCallback.bind(this);
         this.mapManager.draw();
@@ -106,15 +110,15 @@ export class GameManager {
         let entity: Entity;
         switch (name) {
             case 'tank':
-                entity = new Tank(this.spriteManager, this.physicsManager, x, y, angle, type, team);
+                entity = new Tank(this.spriteManager, this.physicsManager, this.soundManager, x, y, angle, type, team);
                 new TankAI(entity, this.physicsManager);
                 break;
             case 'turret':
-                entity = new Turret(this.spriteManager, this.physicsManager, x, y, angle, team);
+                entity = new Turret(this.spriteManager, this.physicsManager, this.soundManager, x, y, angle, team);
                 new TurretAI(entity);
                 break;
             case 'radar':
-                entity = new Radar(this.spriteManager, this.physicsManager, x, y, team);
+                entity = new Radar(this.spriteManager, this.physicsManager, this.soundManager, x, y, team);
                 break;
         }
         this.physicsManager.addEntity(entity);
@@ -140,8 +144,8 @@ export class GameManager {
         if (!this.spriteManager.isLoaded)
             return;
         this.getControlledAreas();
-        this.teamEnergies[1] = Math.min(this.teamEnergies[1] + 2, this.maxTeamEnergies[1]);
-        this.teamEnergies[2] = Math.min(this.teamEnergies[2] + 2, this.maxTeamEnergies[2]);
+        this.teamEnergies[1] = Math.min(this.teamEnergies[1] + 4, this.maxTeamEnergies[1]);
+        this.teamEnergies[2] = Math.min(this.teamEnergies[2] + 4, this.maxTeamEnergies[2]);
         this.updateScores();
       //  return map;
     }

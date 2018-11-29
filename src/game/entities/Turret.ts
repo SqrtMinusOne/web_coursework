@@ -3,13 +3,14 @@ import {SpriteManager} from "../SpriteManager";
 import {PhysicsManager} from "../PhysicsManager";
 import {Explosion} from "./Explosion";
 import {Entity} from "./Entity";
+import {SoundManager} from "../SoundManager";
 
 export class Turret extends EntityWithAttack{
     private _ind: number;
 
-    constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, x: number, y: number, angle: number,
-                team: number) {
-        super(spriteManager, physicsManager, x, y, angle);
+    constructor(spriteManager: SpriteManager, physicsManager: PhysicsManager, soundManager: SoundManager,
+                x: number, y: number, angle: number, team: number) {
+        super(spriteManager, physicsManager, soundManager, x, y, angle);
         this._isDestructible = true;
         this._isRotatable = true;
         this._max_rotate_angle = 20;
@@ -38,7 +39,7 @@ export class Turret extends EntityWithAttack{
 
     destroy(): void {
         super.destroy();
-        this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, this.x, this.y));
+        this.physicsManager.addEntity(new Explosion(this.spriteManager, this.physicsManager, this.soundManager, this.x, this.y));
     }
 
     get spriteName(): string {
