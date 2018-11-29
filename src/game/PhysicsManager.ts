@@ -25,12 +25,12 @@ export class PhysicsManager {
         }
     }
 
-    getMapData(): number[][]{
+    getFullPassableMap(map?: number[][]): number[][]{
         if (!this.passableMap)
             return null;
-        let map = JSON.parse(JSON.stringify(this.passableMap));
+        if (!map) map = JSON.parse(JSON.stringify(this.passableMap));
         for (let entity of this._entities){
-            if (entity.isDestructible){
+            if (entity && entity.isDestructible){
                 let sector = this.getShrinkedRelCoords(entity);
                 for (let i = 0; i < sector.w; i++)
                     for (let j = 0; j < sector.h; j++)
@@ -68,7 +68,7 @@ export class PhysicsManager {
         delete this._entities[entity.index];
     }
 
-    copyPassableMap(){
+    copyPassableMap(): number[][]{
         return JSON.parse(JSON.stringify(this.passableMap));
     }
 
@@ -101,6 +101,8 @@ export class PhysicsManager {
         if (!map)
             return null;
         let d: number = 0;
+        if (check(map, x1, y1) || check(map, x2, y2))
+            return null;
         map[x1][y1] = d;
         let pathFound: boolean = false;
         let allChecked: boolean = false;
@@ -137,7 +139,7 @@ export class PhysicsManager {
                 });
                 x = neighbour.x; y = neighbour.y;
             }
-            PhysicsManager.niceMapOut(map);
+           // PhysicsManager.niceMapOut(map);
             res = res.reverse();
             return res;
         }

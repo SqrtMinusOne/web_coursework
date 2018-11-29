@@ -10,6 +10,7 @@ import {TurretAI} from "./AI/TurretAI";
 import {Radar} from "./entities/Radar";
 import {EntityWithAttack} from "./entities/EntityWithAttack";
 import {SoundManager} from "./SoundManager";
+import {PlayerAI} from "./AI/PlayerAI";
 
 interface Score {
     player: string,
@@ -22,10 +23,12 @@ export class GameManager {
     private eventsManager: EventsManager;
     private physicsManager: PhysicsManager;
     private soundManager: SoundManager;
+    private playerAI: PlayerAI;
     private canvas: HTMLCanvasElement;
-    private teamEnergies: number[] = [0, 0, 0];
+    public teamEnergies: number[] = [0, 0, 0];
     private maxTeamEnergies: number[] = [0, 0, 0];
     private teamScores: number[] = [0, 0, 0];
+    private addPointsAtStep: number = 16;
     private _table_fields: HTMLElement[][];
     private _chosen_team;
     public chosen_name;
@@ -86,14 +89,14 @@ export class GameManager {
         }
     }
 
-    private createEnitity(name: string, x: number, y: number, angle: number = 0,
+    createEnitity(name: string, x: number, y: number, angle: number = 0,
                           type?: number, team: number = this._chosen_team, ignore_conditions: boolean = true): Entity {
         function checkConditions() {
             if (!ignore_conditions) {
                 let map = this.getControlledAreas();
                 let cx = Math.floor(x / this.mapManager.tSize.x);
                 let cy = Math.floor(y / this.mapManager.tSize.y);
-                if (map[cx][cy] != this._chosen_team) {
+                if (map[cx][cy] != team) {
                     return false;
                 }
             }
@@ -149,13 +152,15 @@ export class GameManager {
         if (!this.spriteManager.isLoaded)
             return;
         this.getControlledAreas();
-        this.teamEnergies[1] = Math.min(this.teamEnergies[1] + 4, this.maxTeamEnergies[1]);
-        this.teamEnergies[2] = Math.min(this.teamEnergies[2] + 4, this.maxTeamEnergies[2]);
+        this.teamEnergies[1] = Math.min(this.teamEnergies[1] + this.addPointsAtStep,
+            this.maxTeamEnergies[1]);
+        this.teamEnergies[2] = Math.min(this.teamEnergies[2] + this.addPointsAtStep,
+            this.maxTeamEnergies[2]);
         this.updateScores();
       //  return map;
     }
 
-    private getControlledAreas() {
+    getControlledAreas() {
         let map = this.physicsManager.copyPassableMap();
         this.maxTeamEnergies = [0, 0, 0];
         for (let entity of this.physicsManager.entities) {
@@ -166,7 +171,7 @@ export class GameManager {
                     this.maxTeamEnergies[entity.team] += 25
                 }
                 else
-                    range = range / this.mapManager.tSize.x;
+                    range = Math.floor(range / this.mapManager.tSize.x);
                 let coords = this.physicsManager.getActualRelCoords(entity);
                 let x = coords.x;
                 let y = coords.y;
@@ -194,17 +199,23 @@ export class GameManager {
     }
 
     private checkGameOver(){
-        for (let team = 1; team <= 2; team++){
+        /*for (let team = 1; team <= 2; team++){
             if (this.maxTeamEnergies[team] == 0){
+                let winner = team == 2 ? 1 : 2;
+                let currentScore = this.teamScores[winner];
                 let scoreStr = localStorage.getItem('FedVsRebScore');
                 let scores = [];
                 if (scoreStr){
                     scores = JSON.parse(scoreStr);
                 }
+                for(let score of scores){
+                    if (score.score < currentScore)
+                        break;
+                }
 
                 localStorage.setItem('FedVsRebScore', JSON.stringify(scores));
             }
-        }
+        }*/
     }
 
     set table_fields(value: HTMLElement[][]) { this._table_fields = value; }
@@ -212,6 +223,12 @@ export class GameManager {
     set chosen_team(value) {
         this._chosen_team = value;
         this.game_interval = setInterval(()=>{this.getGameStatus()}, 1000);
+        let teamAI = this._chosen_team == 1 ? 2 : 1;
+        this.playerAI = new PlayerAI(teamAI, this, this.physicsManager);
+    }
+
+    get isLoaded(): boolean{
+        return this.mapManager.isLoaded && this.spriteManager.isLoaded;
     }
 
 }
