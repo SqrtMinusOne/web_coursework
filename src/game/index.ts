@@ -3,8 +3,12 @@ import {GameManager} from "./GameManager";
 require('../styles/style.less');
 require('../../bower_components/w3css-v3/w3.css');
 let canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('main_canvas');
-let miniMapCanvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('minimap_canvas');
-let gameManager = new GameManager(canvas, miniMapCanvas);
+let gameManager = new GameManager(canvas);
+gameManager.table_fields = [
+    [null, document.getElementById('reb_score'), document.getElementById('fed_score')],
+    [null, document.getElementById('reb_energy'), document.getElementById('fed_energy')],
+    [null, document.getElementById('reb_max_energy'), document.getElementById('fed_max_energy')]
+];
 
 document.getElementById('fed_chosen').onclick = function () {
     document.getElementById('side').innerText = "Side chosen";

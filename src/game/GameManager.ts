@@ -16,24 +16,28 @@ export class GameManager {
     private eventsManager: EventsManager;
     private physicsManager: PhysicsManager;
     private canvas: HTMLCanvasElement;
-    private mCanvas: HTMLCanvasElement;
-    public chosen_team;
+    private teamEnergies: number[] = [0, 0, 0];
+    private maxTeamEnergies: number[] = [0, 0, 0];
+    private teamScores: number[] = [0, 0, 0];
+    private _table_fields: HTMLElement[][];
+    private _chosen_team;
     public chosen_name;
     public chosen_type;
+    private game_interval: any = null;
+    private
 
-    constructor(canvas: HTMLCanvasElement, mCanvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.mapManager = new MapManager(canvas, '/assets/first.json');
         this.spriteManager = new SpriteManager(canvas, '/assets/sprites.json', this.mapManager);
         this.eventsManager = new EventsManager(canvas);
         this.physicsManager = new PhysicsManager(this.mapManager, this.spriteManager);
+        this.physicsManager.destroyCallback = this.destroyEntityCallback.bind(this);
         this.mapManager.draw();
         //  this.mapManager.startUpdate();
         this.setUpEvents();
         this.parseEntities();
-        setTimeout(() => {
-            this.calcControlledAreas()
-        }, 1000);
+
     }
 
     setUpEvents() {
@@ -43,9 +47,9 @@ export class GameManager {
         this.eventsManager.addHandler(MOUSE_DOWN, (event: MouseEvent) => {
             let x = event.clientX - (<DOMRect>this.canvas.getBoundingClientRect()).x + this.mapManager.view.x;
             let y = event.clientY - (<DOMRect>this.canvas.getBoundingClientRect()).y + this.mapManager.view.y;
-            if (!this.chosen_team || !this.chosen_type || !this.chosen_name)
+            if (!this._chosen_team || !this.chosen_type || !this.chosen_name)
                 return;
-            this.createEnitity(this.chosen_name, x, y, 0, this.chosen_type, this.chosen_team);
+            this.createEnitity(this.chosen_name, x, y, 0, this.chosen_type, this._chosen_team, false);
             console.log(x, y);
         })
     }
@@ -74,7 +78,31 @@ export class GameManager {
     }
 
     private createEnitity(name: string, x: number, y: number, angle: number = 0,
-                          type?: number, team: number = this.chosen_team): Entity {
+                          type?: number, team: number = this._chosen_team, ignore_conditions: boolean = true): Entity {
+        function checkConditions() {
+            if (!ignore_conditions) {
+                let map = this.getControlledAreas();
+                let cx = Math.floor(x / this.mapManager.tSize.x);
+                let cy = Math.floor(y / this.mapManager.tSize.y);
+                if (map[cx][cy] != this._chosen_team) {
+                    return false;
+                }
+            }
+            let cost: number = 0;
+            switch (name) {
+                case 'tank': cost = 30; break;
+                case 'turret': cost = 75; break;
+                default: cost = 100; break;
+            }
+            if (this.teamEnergies[team] >= cost){
+                this.teamEnergies[team] -= cost;
+                return true;
+            }
+            return false;
+        }
+        if (!ignore_conditions && !checkConditions.call(this)){
+            return;
+        }
         let entity: Entity;
         switch (name) {
             case 'tank':
@@ -93,13 +121,41 @@ export class GameManager {
         return entity;
     }
 
-    private calcControlledAreas() {
+    private destroyEntityCallback(entity: Entity){
+        if (entity.team > 0){
+            let destructor_team = entity.team == 2 ? 1 : 2;
+            if (!entity.isMovable && !entity.isRotatable){
+                this.teamScores[destructor_team] += 100;
+            }
+            else if (!entity.isMovable && entity.isRotatable){
+                this.teamScores[destructor_team] += 50;
+            }
+            else{
+                this.teamScores[destructor_team] += 35;
+            }
+        }
+    }
+
+    private getGameStatus(){
+        if (!this.spriteManager.isLoaded)
+            return;
+        this.getControlledAreas();
+        this.teamEnergies[1] = Math.min(this.teamEnergies[1] + 2, this.maxTeamEnergies[1]);
+        this.teamEnergies[2] = Math.min(this.teamEnergies[2] + 2, this.maxTeamEnergies[2]);
+        this.updateScores();
+      //  return map;
+    }
+
+    private getControlledAreas() {
         let map = this.physicsManager.copyPassableMap();
+        this.maxTeamEnergies = [0, 0, 0];
         for (let entity of this.physicsManager.entities) {
             if (entity.team > 0) {
                 let range = (<EntityWithAttack>entity).range;
-                if (!range)
+                if (!range) {
                     range = 5;
+                    this.maxTeamEnergies[entity.team] += 25
+                }
                 else
                     range = range / this.mapManager.tSize.x;
                 let coords = this.physicsManager.getActualRelCoords(entity);
@@ -116,6 +172,22 @@ export class GameManager {
                 }
             }
         }
+        return map;
+    }
+
+    private updateScores() {
+        for (let team = 1; team <= 2; team++) {
+            this._table_fields[0][team].innerText = this.teamScores[team].toString();
+            this._table_fields[1][team].innerText = this.teamEnergies[team].toString();
+            this._table_fields[2][team].innerText = this.maxTeamEnergies[team].toString();
+        }
+    }
+
+    set table_fields(value: HTMLElement[][]) { this._table_fields = value; }
+
+    set chosen_team(value) {
+        this._chosen_team = value;
+        this.game_interval = setInterval(()=>{this.getGameStatus()}, 1000);
     }
 
 }

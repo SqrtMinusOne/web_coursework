@@ -21,6 +21,7 @@ export class Tank extends EntityWithAttack{
         this._team = team;
         this.sprite_name = `${team === 1 ? 'red_tank_' : 'blue_tank_'}${type}`;
         this._speed = this.speeds[type - 1];
+        this._cost = 30;
         this._max_hp = this.hps[type - 1];
         this._range = this.ranges[type - 1];
         this._attack = this.attacks[type - 1];

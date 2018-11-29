@@ -14,6 +14,7 @@ export class Turret extends EntityWithAttack{
         this._isRotatable = true;
         this._max_rotate_angle = 20;
         this._max_hp = 100;
+        this._cost = 80;
         this._range = 200;
         this._attack = 5;
         this._fireRate = Entity.updateSpeed * 3;

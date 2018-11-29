@@ -7,6 +7,7 @@ export class PhysicsManager {
     private _spriteManager: SpriteManager;
     private passableMap: number[][];
     private _entities: Entity[];
+    private _destroyCallback: (entity: Entity)=>void;
 
     constructor(mapManager: MapManager, spriteManager: SpriteManager){
         this._mapManager = mapManager;
@@ -63,6 +64,7 @@ export class PhysicsManager {
     }
 
     removeEntity(entity: Entity){
+        this._destroyCallback(entity);
         delete this._entities[entity.index];
     }
 
@@ -209,4 +211,6 @@ export class PhysicsManager {
         }
         return res;
     }
+
+    set destroyCallback(value: (entity: Entity) => void) { this._destroyCallback = value; }
 }

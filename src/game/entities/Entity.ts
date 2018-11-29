@@ -23,6 +23,7 @@ export abstract class Entity{
     private _isLoaded: boolean = false;
     // Game stuff
     protected _team: number = -1;
+    protected _cost: number = -1;
     protected physicsManager: PhysicsManager;
     // AI stuff
     protected _AICallback: ()=>void;
@@ -182,6 +183,7 @@ export abstract class Entity{
     get isMovable(): boolean { return this._isMovable; }
     get isDestroyed(): boolean { return this._hp <= 0 }
     get team(): number { return this._team; }
+    get cost(): number { return this._cost; }
     get isLoaded(): boolean { return this._isLoaded; }
     get speed(): number { return this._speed; }
     get max_rotate_angle(): number { return this._max_rotate_angle; }

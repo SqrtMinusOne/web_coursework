@@ -27,13 +27,26 @@ body
                             tr.w3-blue
                                 td Federation
                                 td#fed_score 0
+                        table.w3-table.w3-white.w3-border.w3-border-black
+                            tr
+                                th Side
+                                th Energy
+                                th Max energy
+                            tr.w3-red
+                                td Rebels
+                                td#reb_energy 0
+                                td#reb_max_energy 0
+                            tr.w3-blue
+                                td Federation
+                                td#fed_energy 0
+                                td#fed_max_energy 0
+
                         label Choose an object to place
                         select.w3-select#object_select
                             option(value="" disabled selected) Select an object
-                            option(value="turret") Turret
-                            option(value="tank_1") Tank 1
-                            option(value="tank_2") Tank 2
-                            option(value="tank_3") Tank 3
-                            option(value="tank_4") Tank 4
-                            option(value='radar') Radar
-                        canvas#minimap_canvas(width=100, height=200).w3-margin-top.w3-margin-bottom
+                            option(value="turret (75)") Turret
+                            option(value="tank_1 (30)") Tank 1
+                            option(value="tank_2 (30)") Tank 2
+                            option(value="tank_3 (30)") Tank 3
+                            option(value="tank_4 (30)") Tank 4
+                            option(value='radar (100)') Radar

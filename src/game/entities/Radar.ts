@@ -10,6 +10,7 @@ export class Radar extends Entity{
         super(spriteManager, physicsManager, x, y, 0);
         this._isDestructible = true;
         this._max_hp = 150;
+        this._cost = 100;
         this._hp = this._max_hp;
         this._team = team;
         this.draw();
