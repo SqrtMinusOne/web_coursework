@@ -107,5 +107,6 @@ export class PlayerAI implements AIManager{
         return this._gameManager.teamEnergies[this._team];
     }
 
+    get team(): number { return this._team; }
 
 }

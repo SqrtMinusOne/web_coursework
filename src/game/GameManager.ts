@@ -12,7 +12,7 @@ import {EntityWithAttack} from "./entities/EntityWithAttack";
 import {SoundManager} from "./SoundManager";
 import {PlayerAI} from "./AI/PlayerAI";
 
-interface Score {
+export interface Score {
     player: string,
     score: number
 }
@@ -28,12 +28,13 @@ export class GameManager {
     public teamEnergies: number[] = [0, 0, 0];
     private maxTeamEnergies: number[] = [0, 0, 0];
     private teamScores: number[] = [0, 0, 0];
-    private addPointsAtStep: number = 16;
+    private addPointsAtStep: number = 4;
     private _table_fields: HTMLElement[][];
     private _chosen_team;
     public chosen_name;
     public chosen_type;
     private game_interval: any = null;
+    private isGameOver: boolean = false;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -199,23 +200,34 @@ export class GameManager {
     }
 
     private checkGameOver(){
-        /*for (let team = 1; team <= 2; team++){
+        if (this.isGameOver) return;
+        for (let team = 1; team <= 2; team++){
             if (this.maxTeamEnergies[team] == 0){
                 let winner = team == 2 ? 1 : 2;
+                let winnerText = winner == 2 ? 'Rebels' : 'Federation';
+                if (this.playerAI.team == winner) winnerText += ' AI';
                 let currentScore = this.teamScores[winner];
                 let scoreStr = localStorage.getItem('FedVsRebScore');
-                let scores = [];
-                if (scoreStr){
+                let scores:Score[] = [];
+                if (scoreStr.length > 0){
                     scores = JSON.parse(scoreStr);
                 }
-                for(let score of scores){
-                    if (score.score < currentScore)
+                let i;
+                for(i = 0; i < scores.length; i++){
+                    if (scores[i].score < currentScore)
                         break;
                 }
-
+                scores.splice(i, 0, {
+                    player: winnerText,
+                    score: currentScore
+                });
+                if (scores.length > 5)
+                    scores.pop();
                 localStorage.setItem('FedVsRebScore', JSON.stringify(scores));
+                clearInterval(this.game_interval);
+                this.isGameOver = true;
             }
-        }*/
+        }
     }
 
     set table_fields(value: HTMLElement[][]) { this._table_fields = value; }

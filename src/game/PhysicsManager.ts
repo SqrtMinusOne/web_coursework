@@ -82,7 +82,7 @@ export class PhysicsManager {
         }
         function check(map, x, y, m = -1): boolean{
             if (x >= 0 && y >= 0 && x < map.length && y < map[0].length){
-                if (map[x][y] === m) {
+                if (map[x][y] === m || m == -10) {
                     return true
                 }
             }
@@ -101,7 +101,7 @@ export class PhysicsManager {
         if (!map)
             return null;
         let d: number = 0;
-        if (check(map, x1, y1) || check(map, x2, y2))
+        if (!check(map, x1, y1, -10) || !check(map, x2, y2, -10))
             return null;
         map[x1][y1] = d;
         let pathFound: boolean = false;
